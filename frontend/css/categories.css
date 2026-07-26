@@ -1,0 +1,172 @@
+/* ===================================
+   CATEGORIES PAGE
+=================================== */
+
+.categories-page{
+
+    padding:35px;
+
+}
+
+.categories-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:35px;
+
+}
+
+.categories-header h2{
+
+    font-size:34px;
+
+    color:var(--text-primary);
+
+    margin-bottom:8px;
+
+}
+
+.page-description{
+
+    color:var(--text-secondary);
+
+    font-size:16px;
+
+}
+
+.add-category-btn{
+
+    background:#6366F1;
+
+    color:#FFFFFF;
+
+    border:none;
+
+    padding:14px 22px;
+
+    border-radius:12px;
+
+    cursor:pointer;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    transition:.3s;
+
+}
+
+.add-category-btn:hover{
+
+    background:#4F46E5;
+
+}
+
+.categories-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+
+    gap:25px;
+
+}
+/* ===================================
+   CATEGORY CARD
+=================================== */
+
+.category-card{
+
+    background:var(--card);
+
+    border-radius:20px;
+
+    padding:30px;
+
+    text-align:center;
+
+    box-shadow:0 10px 30px rgba(0,0,0,.06);
+
+    transition:.3s;
+
+    cursor:pointer;
+
+    border:1px solid var(--border);
+
+}
+
+.category-card:hover{
+
+    transform:translateY(-8px);
+
+    box-shadow:0 18px 40px rgba(0,0,0,.12);
+
+}
+
+.category-icon{
+
+    width:70px;
+
+    height:70px;
+
+    margin:0 auto 20px;
+
+    border-radius:50%;
+
+    background:var(--primary-light);
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-size:32px;
+
+}
+
+.category-card h3{
+
+    color:var(--text-primary);
+
+    font-size:22px;
+
+    margin-bottom:10px;
+
+}
+
+.category-card p{
+
+    color:var(--text-secondary);
+
+    font-size:15px;
+
+}
+
+/* ===================================
+   RESPONSIVE
+=================================== */
+
+@media(max-width:768px){
+
+    .categories-header{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+        gap:20px;
+
+    }
+
+    .add-category-btn{
+
+        width:100%;
+
+    }
+
+}

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Expense Tracker</title>
+
+    <!-- ===== ANTI-FOUC: Login page always uses Light theme ===== -->
+    <script>
+        (function() {
+            // Login page is always Light — never apply dark mode here
+        })();
+    </script>
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/toast.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- Left Side -->
+
+    <div class="left">
+
+        <div class="brand">
+
+            <div class="logo">
+
+                <i class="fa-solid fa-wallet"></i>
+
+            </div>
+
+            <h1>Expense Tracker</h1>
+
+            <p>
+                Track your expenses, manage your budget and save more.
+            </p>
+
+        </div>
+
+        <div class="login-card">
+
+            <h2>Welcome Back 👋</h2>
+
+            <p>
+                Sign in to continue
+            </p>
+
+            <form id="loginForm" novalidate autocomplete="on">
+
+                <div class="field">
+                    <label for="email">Email Address</label>
+                    <input id="email" name="email" type="email" placeholder="Enter your email" />
+                </div>
+
+                <div class="field">
+                    <label for="password">Password</label>
+                    <input id="password" name="password" type="password" placeholder="Enter your password" />
+                </div>
+
+                <button id="loginButton" type="submit">Login</button>
+
+                <div class="register-link">
+                    <span>Don't have an account?</span>
+                    <a href="register.html">Create Account</a>
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <!-- Right Side -->
+
+    <div class="right">
+
+        <div class="circle circle1"></div>
+
+        <div class="circle circle2"></div>
+
+        <div class="circle circle3"></div>
+
+        <div class="content">
+
+            <h2>Manage Money Smartly</h2>
+            <p>
+                Monitor every expense.
+
+                Analyze spending.
+
+                Build better financial habits.
+
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="js/toast.js"></script>
+<script src="js/app.js"></script>
+<script src="js/auth.js"></script>
+
+</body>
+</html>

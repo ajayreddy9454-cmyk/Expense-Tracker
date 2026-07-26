@@ -1,0 +1,1245 @@
+/* Large Laptop */
+@media (max-width:1200px){
+
+}
+
+/* Laptop */
+@media (max-width:992px){
+    
+}
+
+/* ==================================================== */
+/* Tablet (768px – 1023px)                                */
+/* ==================================================== */
+
+@media (max-width:1023px){
+
+    /* ---- Dashboard ---- */
+    .summary-cards{
+        grid-template-columns:repeat(2,1fr);
+        gap:18px;
+    }
+
+    .welcome{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:16px;
+    }
+
+    .welcome h1{
+        font-size:28px;
+    }
+
+    .dashboard{
+        padding:25px;
+    }
+
+    /* ---- Sidebar ---- */
+    .sidebar{
+        width:240px;
+        padding:20px 16px;
+    }
+
+    .sidebar.collapsed{
+        width:80px;
+        padding:20px 8px;
+    }
+
+    /* ---- Expense Form ---- */
+    .expense-form{
+        padding:28px;
+    }
+
+    /* ---- Categories / Budget Grids ---- */
+    .categories-grid{
+        grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+        gap:18px;
+    }
+
+    .budget-grid{
+        grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+        gap:18px;
+    }
+
+    /* ---- Reports ---- */
+    .reports-page{
+        padding:25px;
+    }
+
+    .reports-grid{
+        grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+        gap:18px;
+    }
+
+    /* ---- Profile ---- */
+    .profile-page{
+        padding:25px;
+    }
+
+    /* ---- Settings ---- */
+    .settings-page{
+        padding:25px;
+    }
+
+    /* ---- Tables ---- */
+    .expense-table{
+        overflow-x:auto;
+        -webkit-overflow-scrolling:touch;
+    }
+
+    .transactions{
+        overflow-x:auto;
+        -webkit-overflow-scrolling:touch;
+    }
+
+    /* ---- Modals ---- */
+    .modal-confirm{
+        width:380px;
+    }
+}
+
+/* Tablet (max 768px) — keep existing rules, add missing sections */
+@media (max-width:768px){
+
+    body{
+        overflow-x:hidden;
+    }
+
+    .navbar{
+
+        padding:0 20px;
+
+    }
+
+    .profile{
+
+        padding:3px 8px 3px 3px !important;
+
+    }
+
+    .profile img{
+
+        width:30px !important;
+
+        height:30px !important;
+
+    }
+
+    .profile-name{
+
+        max-width:60px !important;
+
+        font-size:13px !important;
+
+    }
+
+    .dropdown-menu{
+
+        width:200px !important;
+
+        right:-10px !important;
+
+    }
+
+    /* ---- Dashboard ---- */
+    .summary-cards{
+        grid-template-columns:repeat(2,1fr);
+        gap:16px;
+    }
+
+    .card{
+        padding:20px;
+    }
+
+    .card-info h2{
+        font-size:24px;
+    }
+
+    .dashboard{
+        padding:20px;
+    }
+
+    .welcome{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:14px;
+    }
+
+.welcome h1{
+        font-size:26px;
+        overflow-wrap:break-word;
+        word-break:break-word;
+        hyphens:auto;
+    }
+
+    /* ---- Sidebar ---- */
+    .sidebar{
+        position:fixed;
+        top:0;
+        left:0;
+        bottom:0;
+        z-index:10000;
+        transform:translateX(-100%);
+        transition:transform 0.3s ease;
+        width:280px;
+        box-shadow:0 0 30px rgba(0,0,0,0.2);
+    }
+
+    .sidebar.collapsed{
+        transform:translateX(-100%);
+        width:280px;
+        padding:25px 20px;
+    }
+
+    .sidebar.collapsed .logo h2{
+        opacity:1;
+        width:auto;
+        overflow:visible;
+        white-space:normal;
+    }
+
+    .sidebar.collapsed .logo-icon{
+        margin:0;
+        width:55px;
+        height:55px;
+    }
+
+    .sidebar.collapsed nav li span,
+    .sidebar.collapsed .logout span{
+        opacity:1;
+        width:auto;
+        overflow:visible;
+        white-space:normal;
+    }
+
+    .sidebar.collapsed nav li{
+        gap:16px;
+        padding:15px 18px;
+        flex-direction:row;
+    }
+
+    .sidebar.collapsed .logout{
+        gap:16px;
+        padding:15px 18px;
+        flex-direction:row;
+    }
+
+    .sidebar.mobile-open{
+        transform:translateX(0);
+    }
+
+    /* Sidebar overlay backdrop */
+    .sidebar-overlay{
+        display:none;
+        position:fixed;
+        top:0;
+        left:0;
+        right:0;
+        bottom:0;
+        background:rgba(0,0,0,0.4);
+        z-index:9999;
+    }
+
+    .sidebar-overlay.active{
+        display:block;
+    }
+
+    /* ---- Expense Form ---- */
+    .expense-page{
+        padding:20px;
+    }
+
+    .expense-form{
+        padding:24px;
+    }
+
+    .expense-form h2{
+        font-size:24px;
+    }
+
+    .form-row{
+        grid-template-columns:1fr;
+        gap:16px;
+    }
+
+    .buttons{
+        flex-direction:column;
+        gap:12px;
+    }
+
+    .buttons button{
+        width:100%;
+    }
+
+    /* ---- Expense History ---- */
+    .expense-history{
+        padding:20px;
+    }
+
+    .expense-header{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:16px;
+    }
+
+    .header-text h2{
+        font-size:26px;
+    }
+
+    .expense-filters{
+        grid-template-columns:1fr;
+        gap:14px;
+    }
+
+    .expense-table{
+        overflow-x:auto;
+        -webkit-overflow-scrolling:touch;
+    }
+
+    .expense-table th,
+    .expense-table td{
+        padding:12px;
+        font-size:14px;
+        white-space:nowrap;
+    }
+
+    /* ---- Width Constraints ---- */
+    .dashboard-container{
+        width:100%;
+    }
+
+    .main-content{
+        width:100%;
+        max-width:100%;
+    }
+
+    .expense-history{
+        width:100%;
+        max-width:100%;
+    }
+
+    .expense-filters .search-box{
+        width:100%;
+    }
+
+    .add-btn{
+        width:100%;
+        justify-content:center;
+    }
+
+    /* ---- Categories ---- */
+    .categories-page{
+        padding:20px;
+    }
+
+    .categories-header{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:16px;
+    }
+
+    .categories-header h2{
+        font-size:26px;
+    }
+
+    .categories-grid{
+        grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+        gap:16px;
+    }
+
+    .category-card{
+        padding:24px;
+    }
+
+    .add-category-btn{
+        width:100%;
+        justify-content:center;
+    }
+
+    /* ---- Budget ---- */
+    .budget-page{
+        padding:20px;
+    }
+
+    .budget-header{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:16px;
+    }
+
+    .budget-header h2{
+        font-size:26px;
+    }
+
+    .budget-grid{
+        grid-template-columns:1fr;
+        gap:16px;
+    }
+
+    .add-budget-btn{
+        width:100%;
+        justify-content:center;
+    }
+
+    /* ---- Reports ---- */
+    .reports-page{
+        padding:20px;
+    }
+
+    .reports-header{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:16px;
+    }
+
+    .reports-header h2{
+        font-size:26px;
+    }
+
+    .reports-grid{
+        grid-template-columns:1fr;
+        gap:16px;
+    }
+
+    .reports-charts{
+        grid-template-columns:1fr;
+        gap:16px;
+    }
+
+    .reports-tables{
+        grid-template-columns:1fr;
+        gap:16px;
+    }
+
+    .reports-tables .table-container:last-child{
+        grid-column:1;
+    }
+
+    .download-btn{
+        width:100%;
+        justify-content:center;
+    }
+
+    /* ---- Profile ---- */
+    .profile-page{
+        padding:20px;
+    }
+
+    .profile-header-left{
+        flex-direction:column;
+        text-align:center;
+    }
+
+    .profile-header-meta{
+        justify-content:center;
+    }
+
+    .profile-section-card,
+    .profile-header-card{
+        padding:24px;
+    }
+
+    .profile-header-avatar{
+        width:100px;
+        height:100px;
+    }
+
+    .profile-header-info h2{
+        font-size:26px;
+    }
+
+    .stats-grid{
+        grid-template-columns:repeat(2,1fr);
+        gap:14px;
+    }
+
+    .form-actions{
+        flex-direction:column;
+    }
+
+    .btn-primary,
+    .btn-secondary{
+        width:100%;
+        justify-content:center;
+    }
+
+    /* ---- Settings ---- */
+    .settings-page{
+        padding:20px;
+    }
+
+    .settings-header h2{
+        font-size:26px;
+    }
+
+    .setting-card{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:14px;
+    }
+
+    .setting-card select,
+    .save-settings-btn{
+        width:100%;
+    }
+
+    .theme-options{
+        width:100%;
+    }
+
+    .theme-option{
+        flex:1;
+        justify-content:center;
+    }
+
+    /* ---- Transactions Table (Dashboard) ---- */
+    .transactions{
+        overflow-x:auto;
+        -webkit-overflow-scrolling:touch;
+    }
+
+    .transactions th,
+    .transactions td{
+        padding:14px 10px;
+        font-size:14px;
+        white-space:nowrap;
+    }
+
+    /* ---- Charts ---- */
+    .charts{
+        gap:18px;
+    }
+
+    .category-card{
+        padding:20px;
+    }
+
+    /* ---- Footer ---- */
+    .footer{
+        padding:18px;
+        font-size:13px;
+    }
+
+    /* ---- Modals ---- */
+    .modal-confirm{
+        width:calc(100% - 32px);
+        max-width:400px;
+        margin:0 auto;
+    }
+
+    /* ---- Toast ---- */
+    .toast-container{
+        top:16px;
+        right:16px;
+        left:16px;
+        max-width:none;
+    }
+
+    .toast{
+        padding:12px 14px;
+    }
+
+    .toast-message{
+        font-size:13px;
+    }
+
+}
+
+/* Mobile */
+@media (max-width:576px){
+
+    body{
+        overflow-x:hidden;
+    }
+
+    .navbar{
+
+        height:64px;
+
+        padding:0 12px;
+
+    }
+
+    .profile{
+
+        padding:2px 6px 2px 2px !important;
+
+        gap:5px !important;
+
+    }
+
+    .profile img{
+
+        width:26px !important;
+
+        height:26px !important;
+
+    }
+
+    .profile-name{
+
+        max-width:50px !important;
+
+        font-size:12px !important;
+
+    }
+
+    .profile i.fa-chevron-down{
+
+        font-size:9px !important;
+
+    }
+
+    .dropdown-menu{
+
+        width:190px !important;
+
+        right:-5px !important;
+
+        top:calc(100% + 6px) !important;
+
+        padding:4px !important;
+
+    }
+
+    .dropdown-item{
+
+        padding:8px 12px !important;
+
+        font-size:13px !important;
+
+    }
+
+    /* ---- Dashboard ---- */
+    .summary-cards{
+        grid-template-columns:1fr;
+        gap:14px;
+    }
+
+    .card{
+        padding:18px;
+    }
+
+    .card-icon{
+        width:50px;
+        height:50px;
+        font-size:18px;
+        margin-bottom:14px;
+    }
+
+    .card-info h4{
+        font-size:13px;
+    }
+
+    .card-info h2{
+        font-size:22px;
+        margin:8px 0;
+    }
+
+    .dashboard{
+        padding:14px;
+    }
+
+    .welcome{
+        gap:12px;
+        margin-bottom:24px;
+    }
+
+.welcome h1{
+        font-size:22px;
+        overflow-wrap:break-word;
+        word-break:break-word;
+        hyphens:auto;
+    }
+
+    .welcome p{
+        font-size:14px;
+    }
+
+    .date-box{
+        padding:10px 16px;
+        font-size:13px;
+        width:100%;
+        justify-content:center;
+    }
+
+    /* ---- Navbar ---- */
+    .navbar{
+        height:60px;
+    }
+
+    .menu-btn{
+        width:40px;
+        height:40px;
+        font-size:16px;
+    }
+
+    .nav-left{
+        gap:12px;
+    }
+
+    .navbar .search-box{
+        display:none;
+    }
+
+    .expense-filters .search-box{
+        width:100%;
+        display:flex;
+    }
+
+    /* ---- Sidebar ---- */
+    .sidebar{
+        width:260px;
+    }
+
+    .sidebar.mobile-open{
+        transform:translateX(0);
+    }
+
+    /* ---- Expense Form ---- */
+    .expense-page{
+        padding:14px;
+    }
+
+    .expense-form{
+        padding:18px;
+        border-radius:14px;
+    }
+
+    .expense-form h2{
+        font-size:22px;
+    }
+
+    .form-row{
+        gap:14px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea{
+        padding:12px;
+        font-size:14px;
+    }
+
+    .page-description{
+        font-size:14px;
+    }
+
+    /* ---- Width Constraints ---- */
+    .dashboard-container{
+        width:100%;
+    }
+
+    .main-content{
+        width:100%;
+        max-width:100%;
+    }
+
+    /* ---- Expense History ---- */
+    .expense-history{
+        padding:14px;
+        width:100%;
+        max-width:100%;
+    }
+
+    .header-text h2{
+        font-size:22px;
+    }
+
+    .add-btn{
+        padding:12px 18px;
+        font-size:14px;
+    }
+
+    .expense-filters{
+        gap:12px;
+    }
+
+    .expense-filters input,
+    .expense-filters select{
+        padding:12px;
+        font-size:14px;
+    }
+
+    .expense-table th,
+    .expense-table td{
+        padding:10px 8px;
+        font-size:13px;
+    }
+
+    .edit-btn,
+    .delete-btn{
+        width:34px;
+        height:34px;
+        font-size:13px;
+    }
+
+    /* ---- Categories ---- */
+    .categories-page{
+        padding:14px;
+    }
+
+    .categories-header h2{
+        font-size:22px;
+    }
+
+    .categories-grid{
+        grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+        gap:14px;
+    }
+
+    .category-card{
+        padding:20px;
+    }
+
+    .category-card h3{
+        font-size:18px;
+    }
+
+    .category-icon{
+        width:56px;
+        height:56px;
+        font-size:24px;
+    }
+
+    .add-category-btn{
+        width:100%;
+        justify-content:center;
+    }
+
+    /* ---- Budget ---- */
+    .budget-page{
+        padding:14px;
+    }
+
+    .budget-header h2{
+        font-size:22px;
+    }
+
+    .budget-card{
+        padding:20px;
+    }
+
+    .budget-top h3{
+        font-size:18px;
+    }
+
+    .budget-info{
+        font-size:13px;
+    }
+
+    /* ---- Reports ---- */
+    .reports-page{
+        padding:14px;
+    }
+
+    .reports-header h2{
+        font-size:22px;
+    }
+
+    .report-card{
+        padding:20px;
+    }
+
+    .report-icon{
+        font-size:34px;
+    }
+
+    .chart-container{
+        padding:18px;
+    }
+
+    .chart-wrapper{
+        max-height:240px;
+    }
+
+    .chart-wrapper canvas{
+        max-height:220px;
+    }
+
+    .table-container{
+        padding:18px;
+    }
+
+    .reports-table th,
+    .reports-table td{
+        padding:10px 10px;
+        font-size:13px;
+    }
+
+    .download-btn{
+        width:100%;
+        justify-content:center;
+    }
+
+    /* ---- Profile ---- */
+    .profile-page{
+        padding:14px;
+        gap:16px;
+    }
+
+    .profile-section-card,
+    .profile-header-card{
+        padding:18px;
+    }
+
+    .profile-section-title h3{
+        font-size:17px;
+    }
+
+    .profile-header-card{
+        padding:24px 18px;
+    }
+
+    .profile-header-avatar{
+        width:80px;
+        height:80px;
+    }
+
+    .profile-header-info h2{
+        font-size:22px;
+    }
+
+    .stats-grid{
+        grid-template-columns:repeat(2,1fr);
+        gap:10px;
+    }
+
+    .stat-item{
+        padding:14px;
+    }
+
+    .stat-icon{
+        width:46px;
+        height:46px;
+        font-size:18px;
+    }
+
+    .stat-info h4{
+        font-size:20px;
+    }
+
+    .stat-info p{
+        font-size:12px;
+    }
+
+    /* ---- Settings ---- */
+    .settings-page{
+        padding:14px;
+    }
+
+    .settings-header h2{
+        font-size:22px;
+    }
+
+    .setting-card{
+        padding:18px;
+    }
+
+    .setting-info h3{
+        font-size:16px;
+    }
+
+    .setting-info p{
+        font-size:13px;
+    }
+
+    .save-settings-btn{
+        width:100%;
+    }
+
+    /* ---- Transactions Table ---- */
+    .transactions{
+        padding:18px;
+    }
+
+    .section-header h3{
+        font-size:18px;
+    }
+
+    .transactions th,
+    .transactions td{
+        padding:12px 8px;
+        font-size:13px;
+    }
+
+    .completed{
+        padding:5px 10px;
+        font-size:12px;
+    }
+
+    /* ---- Footer ---- */
+    .footer{
+        padding:14px;
+        font-size:12px;
+    }
+
+    /* ---- Modals ---- */
+    .modal-confirm{
+        width:calc(100% - 24px);
+        max-width:380px;
+        margin:0 auto;
+        border-radius:12px;
+    }
+
+    .modal-confirm-header{
+        padding:18px 18px 0 18px;
+    }
+
+    .modal-confirm-body{
+        padding:8px 18px 0 18px;
+    }
+
+    .modal-confirm-footer{
+        padding:16px 18px;
+        flex-direction:column-reverse;
+    }
+
+    .modal-confirm-btn{
+        width:100%;
+        text-align:center;
+        padding:12px 22px;
+    }
+
+    .modal-confirm-title{
+        font-size:16px;
+    }
+
+    .modal-confirm-message{
+        font-size:14px;
+    }
+
+    /* ---- Toast ---- */
+    .toast-container{
+        top:12px;
+        right:12px;
+        left:12px;
+    }
+
+    .toast{
+        padding:10px 12px;
+        gap:10px;
+    }
+
+    .toast-message{
+        font-size:13px;
+    }
+
+    .toast-icon{
+        width:24px;
+        height:24px;
+        font-size:11px;
+    }
+
+}
+
+/* ==================================================== */
+/* Extra Small (320px – 480px)                           */
+/* ==================================================== */
+
+@media (max-width:480px){
+
+    body{
+        overflow-x:hidden;
+    }
+
+    /* ---- Dashboard ---- */
+    .dashboard-container{
+        width:100%;
+    }
+
+    .main-content{
+        width:100%;
+        max-width:100%;
+    }
+
+    .dashboard{
+        padding:12px;
+    }
+
+    .expense-history{
+        width:100%;
+        max-width:100%;
+    }
+
+    .welcome h1{
+        font-size:20px;
+        overflow-wrap:break-word;
+        word-break:break-word;
+        hyphens:auto;
+    }
+
+    .card{
+        padding:14px;
+    }
+
+    .card-info h2{
+        font-size:20px;
+    }
+
+    .card-icon{
+        width:44px;
+        height:44px;
+        font-size:16px;
+        margin-bottom:12px;
+    }
+
+    .date-box{
+        font-size:12px;
+        padding:8px 12px;
+    }
+
+    /* ---- Sidebar ---- */
+    .sidebar{
+        width:240px;
+        padding:20px 16px;
+    }
+
+    .sidebar .logo h2{
+        font-size:17px;
+    }
+
+    .sidebar .logo-icon{
+        width:48px;
+        height:48px;
+        font-size:18px;
+    }
+
+    .sidebar nav li{
+        padding:12px 14px;
+        font-size:14px;
+    }
+
+    /* ---- Categories ---- */
+    .categories-grid{
+        grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
+        gap:12px;
+    }
+
+    .category-card{
+        padding:16px;
+    }
+
+    .category-card h3{
+        font-size:16px;
+    }
+
+    .category-icon{
+        width:48px;
+        height:48px;
+        font-size:20px;
+    }
+
+    /* ---- Budget ---- */
+    .budget-card{
+        padding:16px;
+    }
+
+    .budget-top h3{
+        font-size:16px;
+    }
+
+    /* ---- Reports ---- */
+    .report-card{
+        padding:16px;
+    }
+
+    .report-icon{
+        font-size:28px;
+    }
+
+    .chart-container{
+        padding:14px;
+    }
+
+    .table-container{
+        padding:14px;
+    }
+
+    .reports-table th,
+    .reports-table td{
+        padding:8px 8px;
+        font-size:12px;
+    }
+
+    /* ---- Forms ---- */
+    .expense-form{
+        padding:14px;
+    }
+
+    .expense-form h2{
+        font-size:20px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea{
+        padding:10px 12px;
+        font-size:13px;
+    }
+
+    /* ---- Profile ---- */
+    .profile-page{
+        padding:10px;
+        gap:12px;
+    }
+
+    .profile-section-card,
+    .profile-header-card{
+        padding:14px;
+    }
+
+    .profile-header-avatar{
+        width:72px;
+        height:72px;
+    }
+
+    .profile-header-info h2{
+        font-size:20px;
+    }
+
+    .stats-grid{
+        gap:8px;
+    }
+
+    .stat-item{
+        padding:12px;
+    }
+
+    .stat-info h4{
+        font-size:18px;
+    }
+
+    /* ---- Settings ---- */
+    .settings-page{
+        padding:10px;
+    }
+
+    .setting-card{
+        padding:14px;
+    }
+
+    /* ---- Footer ---- */
+    .footer{
+        padding:12px;
+        font-size:12px;
+    }
+
+    /* ---- Toast ---- */
+    .toast-container{
+        top:10px;
+        right:10px;
+        left:10px;
+    }
+
+    .toast{
+        padding:10px;
+        gap:8px;
+    }
+
+    .toast-message{
+        font-size:12px;
+    }
+
+}
+

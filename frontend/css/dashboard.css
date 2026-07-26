@@ -1,0 +1,1530 @@
+/* ==========================
+   GOOGLE FONT & RESET
+========================== */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+:root{
+
+    --primary:#6366F1;
+    --primary-light:#EEF2FF;
+
+    --success:#22C55E;
+    --danger:#EF4444;
+    --warning:#F59E0B;
+
+    /* Light theme (default) */
+    --dark:#111827;
+    --gray:#6B7280;
+    --border:#E5E7EB;
+
+    --background:#F5F7FB;
+    --card:#FFFFFF;
+    --sidebar-bg:#FFFFFF;
+    --navbar-bg:#FFFFFF;
+    --input-bg:#FFFFFF;
+    --text-primary:#111827;
+    --text-secondary:#6B7280;
+    --hover-bg:#F3F4F6;
+
+}
+
+body{
+
+    font-family:'Poppins',sans-serif;
+
+    background:var(--background);
+
+    color:var(--text-primary);
+
+}
+
+/* ==========================
+   DARK MODE
+========================== */
+
+body.dark-mode{
+
+    --dark:#FFFFFF;
+    --gray:#D1D5DB;
+    --border:#374151;
+
+    --background:#111827;
+    --card:#1F2937;
+    --sidebar-bg:#111827;
+    --navbar-bg:#111827;
+    --input-bg:#374151;
+    --text-primary:#FFFFFF;
+    --text-secondary:#D1D5DB;
+    --hover-bg:#1F2937;
+
+    --primary-light:rgba(99,102,241,0.15);
+
+}
+
+.dashboard-container{
+
+    display:flex;
+
+    min-height:100vh;
+
+}
+
+.main-content{
+
+    flex:1;
+
+    display:flex;
+
+    flex-direction:column;
+
+    background:var(--background);
+
+}
+
+.dashboard{
+
+    padding:35px;
+
+}
+
+/* ==========================
+   NAVBAR
+========================== */
+
+.navbar{
+
+    height:80px;
+
+    background:var(--navbar-bg);
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:0 35px;
+
+    border-bottom:1px solid var(--border);
+
+}
+
+.nav-left{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:20px;
+
+}
+
+.menu-btn{
+
+    width:45px;
+
+    height:45px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:var(--primary-light);
+
+    color:var(--primary);
+
+    font-size:18px;
+
+    cursor:pointer;
+
+}
+
+.search-box{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    background:var(--input-bg);
+
+    padding:12px 18px;
+
+    border-radius:12px;
+
+    width:350px;
+
+    border:1px solid var(--border);
+
+}
+
+.search-box i{
+
+    color:var(--text-secondary);
+
+}
+
+.search-box input{
+
+    width:100%;
+
+    border:none;
+
+    background:transparent;
+
+    outline:none;
+
+    font-size:15px;
+
+    font-family:'Poppins',sans-serif;
+
+    color:var(--text-primary);
+
+}
+
+.nav-right{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:20px;
+
+}
+
+.icon-btn{
+
+    width:45px;
+
+    height:45px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:var(--hover-bg);
+
+    cursor:pointer;
+
+    font-size:18px;
+
+    color:var(--text-primary);
+
+}
+
+.profile{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    cursor:pointer;
+
+    position:relative;
+
+    padding:4px 10px 4px 4px;
+
+    border-radius:40px;
+
+    transition:background 0.2s;
+
+    border:1px solid var(--border);
+
+    background:var(--card);
+
+    user-select:none;
+
+}
+
+.profile:hover{
+
+    background:var(--hover-bg);
+
+}
+
+.profile.active{
+
+    border-color:var(--primary);
+
+    box-shadow:0 0 0 2px rgba(99,102,241,0.15);
+
+}
+
+.profile img{
+
+    width:34px;
+
+    height:34px;
+
+    border-radius:50%;
+
+    object-fit:cover;
+
+    flex-shrink:0;
+
+}
+
+.profile-name{
+
+    font-size:14px;
+
+    font-weight:600;
+
+    color:var(--text-primary);
+
+    white-space:nowrap;
+
+    max-width:80px;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+}
+
+.profile i.fa-chevron-down{
+
+    font-size:10px;
+
+    color:var(--text-secondary);
+
+    transition:transform 0.25s ease;
+
+    flex-shrink:0;
+
+}
+
+.profile.active i.fa-chevron-down{
+
+    transform:rotate(180deg);
+
+}
+
+/* ---------- Profile Dropdown ---------- */
+
+.dropdown-menu{
+
+    position:absolute;
+
+    top:calc(100% + 8px);
+
+    right:0;
+
+    background:var(--card);
+
+    border-radius:12px;
+
+    box-shadow:0 10px 40px rgba(0,0,0,0.15);
+
+    width:220px;
+
+    padding:6px;
+
+    opacity:0;
+
+    visibility:hidden;
+
+    transform:translateY(-8px) scale(0.96);
+
+    transition:all 0.25s cubic-bezier(0.16,1,0.3,1);
+
+    z-index:1000;
+
+    border:1px solid var(--border);
+
+    transform-origin:top right;
+
+}
+
+.dropdown-menu.show{
+
+    opacity:1;
+
+    visibility:visible;
+
+    transform:translateY(0) scale(1);
+
+}
+
+.dropdown-item{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+    padding:10px 14px;
+
+    border-radius:8px;
+
+    text-decoration:none;
+
+    color:var(--text-primary);
+
+    font-size:14px;
+
+    font-weight:500;
+
+    transition:all 0.15s ease;
+
+    cursor:pointer;
+
+}
+
+.dropdown-item i{
+
+    width:18px;
+
+    text-align:center;
+
+    font-size:15px;
+
+    color:var(--text-secondary);
+
+    flex-shrink:0;
+
+}
+
+.dropdown-item span{
+
+    flex:1;
+    display:inline-block;
+
+}
+
+.dropdown-item:hover{
+
+    background:var(--primary-light);
+
+    color:var(--primary);
+
+}
+
+.dropdown-item:hover i{
+
+    color:var(--primary);
+
+}
+
+.dropdown-logout{
+
+    color:var(--danger);
+
+}
+
+.dropdown-logout i{
+
+    color:var(--danger);
+
+}
+
+.dropdown-logout:hover{
+
+    background:#FEF2F2 !important;
+
+    color:var(--danger) !important;
+
+}
+
+.dropdown-logout:hover i{
+
+    color:var(--danger) !important;
+
+}
+
+body.dark-mode .dropdown-logout:hover{
+
+    background:rgba(239,68,68,0.15) !important;
+
+    color:#F87171 !important;
+
+}
+
+body.dark-mode .dropdown-logout:hover i{
+
+    color:#F87171 !important;
+
+}
+
+body.dark-mode .dropdown-item:hover{
+
+    background:rgba(255,255,255,0.08);
+
+    color:var(--text-primary);
+
+}
+
+body.dark-mode .dropdown-item:hover i{
+
+    color:var(--text-primary);
+
+}
+
+.dropdown-divider{
+
+    height:1px;
+
+    background:var(--border);
+
+    margin:4px 0;
+
+}
+
+
+
+/* =====================================
+   SIDEBAR
+===================================== */
+.sidebar{
+
+    width:280px;
+
+    background:var(--sidebar-bg);
+
+    color:var(--text-primary);
+
+    display:flex;
+
+    flex-direction:column;
+
+    padding:25px 20px;
+
+    transition:width 0.3s, padding 0.3s;
+
+    border-right:1px solid var(--border);
+
+}
+
+/* =====================================
+   COLLAPSIBLE SIDEBAR (CSS-only)
+===================================== */
+
+.sidebar.collapsed{
+
+    width:90px;
+
+    padding:25px 12px;
+
+}
+
+.sidebar.collapsed .logo h2{
+
+    opacity:0;
+
+    width:0;
+
+    overflow:hidden;
+
+    white-space:nowrap;
+
+    margin:0;
+
+}
+
+/* keep logo icon visible and centered */
+.sidebar.collapsed .logo{
+
+    margin-bottom:25px;
+
+}
+
+.sidebar.collapsed .logo-icon{
+
+    margin:0;
+
+    width:55px;
+
+    height:55px;
+
+}
+
+/* Hide all menu text when collapsed */
+.sidebar.collapsed nav li span,
+.sidebar.collapsed .logout span{
+
+    opacity:0;
+
+    width:0;
+
+    overflow:hidden;
+
+    white-space:nowrap;
+
+    margin:0;
+
+}
+
+/* Center icons vertically (and horizontally within the narrow sidebar) */
+.sidebar.collapsed nav li{
+
+    gap:0;
+
+    padding-left:12px;
+
+    padding-right:12px;
+
+}
+
+.sidebar.collapsed nav li i{
+
+    width:22px;
+
+    text-align:center;
+
+}
+
+.sidebar.collapsed nav li{
+
+    flex-direction:column;
+
+    align-items:center;
+
+    justify-content:center;
+
+}
+
+/* Make logout icon+container center */
+.sidebar.collapsed .logout{
+
+    gap:0;
+
+    padding-left:12px;
+
+    padding-right:12px;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    justify-content:center;
+
+    text-align:center;
+
+}
+
+/* Ensure main content expands naturally when sidebar collapses */
+.dashboard-container{
+
+    transition:all 0.3s;
+
+}
+
+.sidebar.collapsed{
+
+    flex:0 0 auto;
+
+}
+
+.main-content{
+
+    transition:all 0.3s;
+
+}
+
+.sidebar.collapsed ~ .main-content{
+
+    transition:all 0.3s;
+
+}
+
+.sidebar-top{
+
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+.logo{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:15px;
+
+    margin-bottom:30px;
+
+}
+
+nav{
+
+    flex:1;
+
+}
+
+nav ul{
+
+    list-style:none;
+
+}
+
+.logout{
+
+    margin-top:auto;
+
+    padding-top:30px;
+
+}
+
+.logo{
+
+    display:flex;
+    align-items:center;
+    gap:15px;
+
+    margin-bottom:25px;
+
+}
+
+.logo-icon{
+
+    width:55px;
+    height:55px;
+
+    border-radius:16px;
+
+    background:linear-gradient(135deg,#6366F1,#8B5CF6);
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    font-size:22px;
+
+    color:#fff;
+
+}
+
+.logo h2{
+
+    font-size:20px;
+    font-weight:600;
+
+    color:var(--text-primary);
+
+}
+
+nav ul{
+
+    list-style:none;
+
+}
+
+nav li{
+
+    display:flex;
+    align-items:center;
+
+    gap:16px;
+
+    padding:15px 18px;
+
+    margin-bottom:12px;
+
+    border-radius:14px;
+
+    cursor:pointer;
+
+    transition:.3s;
+
+    color:var(--text-secondary);
+
+}
+
+nav li:hover{
+
+    background:var(--hover-bg);
+
+    color:var(--text-primary);
+
+}
+
+nav li a{
+
+    display:flex;
+    align-items:center;
+    gap:16px;
+    text-decoration:none;
+    color:inherit;
+    width:100%;
+
+}
+
+.active{
+
+    background:linear-gradient(135deg,#6366F1,#8B5CF6) !important;
+
+    color:#fff !important;
+
+}
+
+.active a{
+
+    color:#fff !important;
+
+}
+
+nav li i{
+
+    width:22px;
+    font-size:18px;
+
+}
+
+.logout{
+
+    display:flex;
+    align-items:center;
+
+    gap:16px;
+
+    padding:15px 18px;
+
+    border-radius:14px;
+
+    cursor:pointer;
+
+    transition:.3s;
+
+    color:var(--text-secondary);
+
+}
+
+.logout:hover{
+
+    background:var(--hover-bg);
+
+    color:var(--danger);
+
+}
+
+.logout i{
+
+    width:22px;
+    font-size:18px;
+
+}
+
+/* =====================================
+   WELCOME SECTION
+===================================== */
+
+.welcome{
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    margin-bottom:35px;
+
+}
+
+.welcome h1{
+
+    font-size:38px;
+    color:var(--text-primary);
+
+}
+
+.welcome span{
+
+    color:var(--primary);
+
+}
+
+.welcome p{
+
+    margin-top:10px;
+
+    color:var(--text-secondary);
+
+    font-size:16px;
+
+}
+
+.date-box{
+
+    display:flex;
+    align-items:center;
+    gap:10px;
+
+    background:var(--card);
+
+    padding:14px 22px;
+
+    border-radius:14px;
+
+    border:1px solid var(--border);
+
+    color:var(--text-primary);
+
+}
+
+.date-box i{
+
+    color:var(--primary);
+
+}
+
+/* =====================================
+   SUMMARY CARDS
+===================================== */
+
+.summary-cards{
+
+    display:grid;
+
+    grid-template-columns:repeat(4,1fr);
+
+    gap:25px;
+
+    margin-bottom:35px;
+
+}
+
+.card{
+
+    background:var(--card);
+
+    padding:25px;
+
+    border-radius:18px;
+
+    border:1px solid var(--border);
+
+    transition:.3s;
+
+}
+
+.card:hover{
+
+    transform:translateY(-6px);
+
+}
+
+.card-icon{
+
+    width:60px;
+
+    height:60px;
+
+    border-radius:16px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-size:22px;
+
+    color:white;
+
+    margin-bottom:18px;
+
+}
+
+.balance{
+
+    background:#6366F1;
+
+}
+
+.income{
+
+    background:#22C55E;
+
+}
+
+.expense{
+
+    background:#EF4444;
+
+}
+
+.savings{
+
+    background:#F59E0B;
+
+}
+
+.card-info h4{
+
+    color:var(--text-secondary);
+
+    font-size:15px;
+
+}
+
+.card-info h2{
+
+    margin:12px 0;
+
+    font-size:30px;
+
+    color:var(--text-primary);
+
+}
+
+.card-info p{
+
+    color:var(--text-secondary);
+
+}
+
+/* =====================================
+   CHARTS (Top Categories)
+===================================== */
+
+.charts{
+
+    display:grid;
+
+    grid-template-columns:1fr;
+
+    gap:25px;
+
+    margin-bottom:35px;
+
+}
+
+.category-card{
+
+    background:var(--card);
+
+    border-radius:18px;
+
+    padding:25px;
+
+    border:1px solid var(--border);
+
+}
+
+.section-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:25px;
+
+}
+
+.section-header h3{
+
+    font-size:22px;
+
+    color:var(--text-primary);
+
+}
+
+/* =====================================
+   TOP CATEGORIES
+===================================== */
+
+.category-list{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:18px;
+
+}
+
+.category-item{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:14px 16px;
+
+    border-radius:12px;
+
+    background:var(--background);
+
+    transition:.3s;
+
+}
+
+.category-item:hover{
+
+    background:var(--primary-light);
+
+    transform:translateX(6px);
+
+}
+
+.category-item span{
+
+    font-weight:500;
+
+    color:var(--text-primary);
+
+}
+
+.category-item strong{
+
+    color:var(--primary);
+
+}
+
+/* =====================================
+   RECENT TRANSACTIONS
+===================================== */
+
+.transactions{
+
+    margin-top:35px;
+
+    background:var(--card);
+
+    border-radius:18px;
+
+    padding:25px;
+
+    border:1px solid var(--border);
+
+}
+
+.transactions table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+}
+
+.transactions th{
+
+    text-align:left;
+
+    padding:18px 12px;
+
+    color:var(--text-secondary);
+
+    font-size:15px;
+
+    border-bottom:1px solid var(--border);
+
+}
+
+.transactions td{
+
+    padding:18px 12px;
+
+    border-bottom:1px solid var(--border);
+
+    color:var(--text-primary);
+
+}
+
+.transactions tbody tr{
+
+    transition:.3s;
+
+}
+
+.transactions tbody tr:hover{
+
+    background:var(--hover-bg);
+
+}
+
+.completed{
+
+    background:#DCFCE7;
+
+    color:#16A34A;
+
+    padding:8px 14px;
+
+    border-radius:25px;
+
+    font-size:13px;
+
+    font-weight:600;
+
+}
+
+body.dark-mode .completed{
+
+    background:rgba(22,163,74,0.2);
+
+}
+
+.section-header a{
+
+    text-decoration:none;
+
+    color:var(--primary);
+
+    font-weight:600;
+
+}
+
+/* =====================================
+   FOOTER
+===================================== */
+
+.footer{
+
+    text-align:center;
+
+    padding:25px;
+
+    color:var(--text-secondary);
+
+    font-size:14px;
+
+    border-top:1px solid var(--border);
+
+    margin-top:40px;
+
+}
+
+/* =====================================
+   FORM ELEMENTS (global)
+===================================== */
+
+input, select, textarea{
+
+    font-family:'Poppins',sans-serif;
+
+    background:var(--input-bg);
+
+    border:1px solid var(--border);
+
+    color:var(--text-primary);
+
+    border-radius:10px;
+
+    padding:12px 16px;
+
+    outline:none;
+
+    transition:border-color 0.2s;
+
+}
+
+input:focus, select:focus, textarea:focus{
+
+    border-color:var(--primary);
+
+}
+
+input::placeholder, textarea::placeholder{
+
+    color:var(--text-secondary);
+
+}
+
+label{
+
+    color:var(--text-primary);
+
+    font-weight:500;
+
+    margin-bottom:6px;
+
+    display:block;
+
+}
+
+button{
+
+    font-family:'Poppins',sans-serif;
+
+}
+
+/* =========================================================
+   DARK MODE — Global Overrides for ALL Page Components
+   =========================================================
+   These rules ensure that EVERY page gets full dark mode
+   when body.dark-mode is applied.
+   ========================================================= */
+
+/* ----- Page Headers (Categories, Budget, Reports, Settings, etc.) ----- */
+body.dark-mode .categories-header h2,
+body.dark-mode .budget-header h2,
+body.dark-mode .reports-header h2,
+body.dark-mode .expense-form h2,
+body.dark-mode .header-text h2 {
+    color: var(--text-primary);
+}
+
+body.dark-mode .page-description {
+    color: var(--text-secondary);
+}
+
+/* ----- Category Cards ----- */
+body.dark-mode .category-card {
+    background: var(--card);
+    box-shadow: none;
+    border: 1px solid var(--border);
+}
+
+body.dark-mode .category-card h3 {
+    color: var(--text-primary);
+}
+
+body.dark-mode .category-card p {
+    color: var(--text-secondary);
+}
+
+body.dark-mode .category-icon {
+    background: var(--primary-light);
+}
+
+/* ----- Budget Cards ----- */
+body.dark-mode .budget-card {
+    background: var(--card);
+    box-shadow: none;
+    border: 1px solid var(--border);
+}
+
+body.dark-mode .budget-card h3 {
+    color: var(--text-primary);
+}
+
+body.dark-mode .budget-top span {
+    color: var(--primary);
+}
+
+body.dark-mode .budget-info {
+    color: var(--text-secondary);
+}
+
+body.dark-mode .progress-bar {
+    background: var(--border);
+}
+
+/* ----- Expense Form ----- */
+body.dark-mode .expense-form {
+    background: var(--card);
+    box-shadow: none;
+    border: 1px solid var(--border);
+}
+
+body.dark-mode .expense-form h2 {
+    color: var(--text-primary);
+}
+
+body.dark-mode .form-group label {
+    color: var(--text-primary);
+}
+
+/* ----- Expense Table ----- */
+body.dark-mode .expense-table {
+    background: var(--card);
+    box-shadow: none;
+    border: 1px solid var(--border);
+}
+
+body.dark-mode .expense-table thead {
+    background: var(--hover-bg);
+}
+
+body.dark-mode .expense-table th {
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border);
+}
+
+body.dark-mode .expense-table td {
+    color: var(--text-primary);
+    border-top: 1px solid var(--border);
+}
+
+body.dark-mode .expense-table tbody tr:hover {
+    background: var(--hover-bg);
+}
+
+/* ----- Expense Filters ----- */
+body.dark-mode .expense-filters input,
+body.dark-mode .expense-filters select {
+    background: var(--input-bg);
+    border-color: var(--border);
+    color: var(--text-primary);
+}
+
+body.dark-mode .expense-filters input::placeholder {
+    color: #9CA3AF;
+}
+
+/* ----- Buttons (non-primary) ----- */
+body.dark-mode .cancel {
+    background: var(--hover-bg);
+    color: var(--text-primary);
+}
+
+body.dark-mode .cancel:hover {
+    background: var(--border);
+}
+
+/* ----- Reports Page ----- */
+body.dark-mode .report-card {
+    background: var(--card);
+    box-shadow: none;
+    border: 1px solid var(--border);
+}
+
+body.dark-mode .report-card h3 {
+    color: var(--text-primary);
+}
+
+body.dark-mode .report-card p {
+    color: var(--text-secondary);
+}
+
+body.dark-mode .report-card h2 {
+    color: var(--primary);
+}
+
+body.dark-mode .chart-container {
+    background: var(--card);
+    box-shadow: none;
+    border: 1px solid var(--border);
+}
+
+body.dark-mode .chart-container h3 {
+    color: var(--text-primary);
+}
+
+body.dark-mode .table-container {
+    background: var(--card);
+    box-shadow: none;
+    border: 1px solid var(--border);
+}
+
+body.dark-mode .table-container h3 {
+    color: var(--text-primary);
+}
+
+/* ----- Reports Tables ----- */
+body.dark-mode .reports-table thead {
+    background: var(--hover-bg);
+}
+
+body.dark-mode .reports-table th {
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--border);
+}
+
+body.dark-mode .reports-table td {
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border);
+}
+
+body.dark-mode .reports-table tbody tr:hover {
+    background: var(--hover-bg);
+}
+
+body.dark-mode .remaining-positive {
+    color: var(--success);
+}
+
+body.dark-mode .remaining-negative {
+    color: var(--danger);
+}
+
+body.dark-mode .remaining-zero {
+    color: var(--text-secondary);
+}
+
+/* ----- Settings toggles ----- */
+body.dark-mode .slider {
+    background: var(--border);
+}
+
+body.dark-mode .slider:before {
+    background: var(--text-primary);
+}
+
+body.dark-mode .switch input:checked + .slider {
+    background: var(--primary);
+}
+
+/* ----- Modals (Categories, Budget pages) ----- */
+body.dark-mode .modal-overlay .modal {
+    background: var(--card);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    border: 1px solid var(--border);
+}
+
+body.dark-mode .modal-overlay .modal h3 {
+    color: var(--text-primary);
+}
+
+body.dark-mode .modal-overlay .modal label {
+    color: var(--text-secondary);
+}
+
+body.dark-mode .modal-overlay .modal input,
+body.dark-mode .modal-overlay .modal select {
+    background: var(--input-bg);
+    border-color: var(--border);
+    color: var(--text-primary);
+}
+
+body.dark-mode .modal-overlay .modal input:focus,
+body.dark-mode .modal-overlay .modal select:focus {
+    border-color: var(--primary);
+}
+
+body.dark-mode .modal-close-btn {
+    color: var(--text-secondary);
+}
+
+body.dark-mode .modal-close-btn:hover {
+    color: var(--text-primary);
+}
+
+body.dark-mode .modal-cancel-btn {
+    background: var(--hover-bg);
+    border-color: var(--border);
+    color: var(--text-primary);
+}
+
+body.dark-mode .modal-cancel-btn:hover {
+    background: var(--border);
+}
+
+/* ----- Category action buttons in modal ----- */
+body.dark-mode .category-edit-btn {
+    background: rgba(99,102,241,0.15);
+    color: var(--primary);
+}
+
+body.dark-mode .category-edit-btn:hover {
+    background: rgba(99,102,241,0.25);
+}
+
+body.dark-mode .category-delete-btn {
+    background: rgba(239,68,68,0.15);
+    color: var(--danger);
+}
+
+body.dark-mode .category-delete-btn:hover {
+    background: rgba(239,68,68,0.25);
+}
+
+/* =========================================================
+   END DARK MODE GLOBAL OVERRIDES
+   ========================================================= */
+

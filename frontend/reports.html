@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Reports | Expense Tracker</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+    <!-- jsPDF & AutoTable -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+    <!-- ===== ANTI-FOUC: Apply user-specific theme BEFORE first paint ===== -->
+    <script>
+        (function() {
+            var userId = null;
+            try {
+                var stored = localStorage.getItem("currentUser");
+                if (stored) {
+                    var user = JSON.parse(stored);
+                    if (user && user.id) userId = user.id;
+                }
+            } catch(e) {}
+            var theme = userId ? localStorage.getItem("theme_" + userId) : null;
+            if (theme === "dark") {
+                document.documentElement.classList.add("dark-mode");
+                var style = document.createElement("style");
+                style.textContent = "html.dark-mode{--dark:#FFFFFF;--gray:#D1D5DB;--border:#374151;--background:#111827;--card:#1F2937;--sidebar-bg:#111827;--navbar-bg:#111827;--input-bg:#374151;--text-primary:#FFFFFF;--text-secondary:#D1D5DB;--hover-bg:#1F2937;--primary-light:rgba(99,102,241,0.15)}";
+                document.head.insertBefore(style, document.head.querySelector('link[rel="stylesheet"]'));
+            }
+        })();
+    </script>
+
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/reports.css">
+    <link rel="stylesheet" href="css/responsive.css">
+
+    <!-- Toast & Modal CSS -->
+    <link rel="stylesheet" href="css/toast.css">
+    <link rel="stylesheet" href="css/modal.css">
+
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+    <!-- Copy SAME Sidebar from dashboard.html -->
+
+    <aside class="sidebar">
+
+      <div class="logo">
+
+    <div class="logo-icon">
+
+        <i class="fa-solid fa-wallet"></i>
+
+    </div>
+
+    <h2>Expense Tracker</h2>
+
+</div>
+
+
+<nav>
+
+    <ul>
+
+       <li>
+
+    <a href="dashboard.html">
+
+        <i class="fa-solid fa-house"></i>
+
+        <span>Dashboard</span>
+
+    </a>
+
+</li>
+
+        <li>
+
+            <a href="add_expense.html">
+
+                <i class="fa-solid fa-plus"></i>
+
+                <span>Add Expense</span>
+
+            </a>
+
+        </li>
+
+
+        <li>
+
+            <a href="expenses.html">
+
+                <i class="fa-solid fa-receipt"></i>
+
+                <span>Expenses</span>
+
+            </a>
+
+        </li>
+
+
+        <li>
+
+            <a href="categories.html">
+
+                <i class="fa-solid fa-layer-group"></i>
+
+                <span>Categories</span>
+
+            </a>
+
+        </li>
+
+
+        <li>
+
+            <i class="fa-solid fa-chart-pie"></i>
+
+            <a href="reports.html">
+
+            <span>Reports</span>
+
+        </a>
+
+        </li>
+
+        <li>
+
+            <a href="budget.html">
+
+                <i class="fa-solid fa-wallet"></i>
+
+                <span>Budget</span>
+
+            </a>
+
+        </li>
+
+
+        <li>
+
+            <a href="profile.html">
+
+                <i class="fa-solid fa-user"></i>
+
+                <span>Profile</span>
+
+            </a>
+
+        </li>
+
+
+        <li>
+
+            <a href="settings.html">
+
+                <i class="fa-solid fa-gear"></i>
+
+                <span>Settings</span>
+
+            </a>
+
+        </li>
+
+
+    </ul>
+
+</nav>
+
+
+<div class="logout">
+
+    <i class="fa-solid fa-right-from-bracket"></i>
+
+    <span>Logout</span>
+
+</div>
+
+    </aside>
+
+    <main class="main-content">
+
+        <!-- Copy SAME Navbar from dashboard.html -->
+
+            <header class="navbar">
+
+    <!-- Left -->
+
+    <div class="nav-left">
+
+        <button class="menu-btn">
+
+            <i class="fa-solid fa-bars"></i>
+
+        </button>
+
+    </div>
+
+    <!-- Right -->
+
+    <div class="nav-right">
+
+        <div class="profile" id="profileDropdown">
+
+            <img
+                id="navProfileAvatar"
+                src="assets/images/default-avatar.png"
+                alt="Profile"
+                onerror="this.onerror=null;this.src='assets/images/default-avatar.png'"
+            >
+
+            <span class="profile-name" id="navUserName">User</span>
+
+            <i class="fa-solid fa-chevron-down"></i>
+
+            <div class="dropdown-menu">
+                <a href="profile.html" class="dropdown-item">
+                    <i class="fa-solid fa-user"></i>
+                    <span>My Profile</span>
+                </a>
+                <a href="settings.html" class="dropdown-item">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Settings</span>
+                </a>
+                <div class="dropdown-divider"></div>
+                <a href="#" class="dropdown-item dropdown-logout" id="dropdownLogoutBtn">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+
+        </div>
+
+    </div>
+
+</header>
+
+        <section class="reports-page">
+
+            <div class="reports-header">
+
+                <div>
+
+                    <h2>Reports & Analytics</h2>
+
+                    <p class="page-description">
+
+                        Analyze your expenses and financial trends.
+
+                    </p>
+
+                </div>
+
+                <button class="download-btn">
+
+                    <i class="fa-solid fa-download"></i>
+
+                    Download Report
+
+                </button>
+
+            </div>
+
+            <!-- Summary Cards -->
+
+            <div class="reports-grid">
+
+                <div class="report-card">
+
+                    <i class="fa-solid fa-receipt report-icon"></i>
+
+                    <h3>Total Expenses</h3>
+
+                    <h2 id="total-expenses-value">0</h2>
+
+                    <p>Total records</p>
+
+                </div>
+
+                <div class="report-card">
+
+                    <i class="fa-solid fa-arrow-trend-down report-icon"></i>
+
+                    <h3>Total Amount Spent</h3>
+
+                    <h2 id="total-amount-value">₹0</h2>
+
+                    <p>Lifetime</p>
+
+                </div>
+
+            </div>
+
+            <!-- Charts Section -->
+
+            <section class="reports-charts">
+
+                <div class="chart-container">
+
+                    <h3>Monthly Expenses — Chart</h3>
+
+                    <div class="chart-wrapper">
+
+                        <canvas id="monthlyChart"></canvas>
+
+                    </div>
+
+                </div>
+
+                <div class="chart-container">
+
+                    <h3>Category Summary — Chart</h3>
+
+                    <div class="chart-wrapper">
+
+                        <canvas id="categoryChart"></canvas>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- Tables Section -->
+
+            <section class="reports-tables">
+
+                <div class="table-container">
+
+                    <h3>Monthly Expenses</h3>
+
+                    <div class="table-responsive">
+
+                        <table class="reports-table" id="monthly-expenses-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Month</th>
+
+                                    <th>Total Amount</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="monthly-expenses-body">
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+                <div class="table-container">
+
+                    <h3>Category Summary</h3>
+
+                    <div class="table-responsive">
+
+                        <table class="reports-table" id="category-summary-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Category</th>
+
+                                    <th>Amount</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="category-summary-body">
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+                <div class="table-container">
+
+                    <h3>Budget Summary</h3>
+
+                    <div class="table-responsive">
+
+                        <table class="reports-table" id="budget-summary-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Category</th>
+
+                                    <th>Budget</th>
+
+                                    <th>Spent</th>
+
+                                    <th>Remaining</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="budget-summary-body">
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </section>
+
+        <!-- ================= Footer ================= -->
+
+        <footer class="footer">
+
+            <p>
+
+                © 2026 Expense Tracker | All Rights Reserved
+
+            </p>
+
+        </footer>
+
+    </main>
+
+</div>
+
+<script src="js/toast.js"></script>
+<script src="js/modal.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/app.js"></script>
+<script src="js/reports.js"></script>
+
+</body>
+
+</html>
+

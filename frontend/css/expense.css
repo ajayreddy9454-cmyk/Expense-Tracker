@@ -1,0 +1,469 @@
+/* ==========================================
+   EXPENSE TRACKER
+   expense.css
+   Version 1.0
+========================================== */
+
+/* ==========================================
+   ADD EXPENSE PAGE
+========================================== */
+
+.expense-page{
+
+    padding:35px;
+
+}
+
+.expense-form{
+
+    max-width:900px;
+
+    margin:auto;
+
+    background:var(--card);
+
+    border-radius:20px;
+
+    padding:35px;
+
+    box-shadow:0 10px 30px rgba(0,0,0,.06);
+
+    border:1px solid var(--border);
+
+}
+
+.expense-form h2{
+
+    font-size:34px;
+
+    color:var(--text-primary);
+
+    margin-bottom:10px;
+
+}
+
+.page-description{
+
+    color:var(--text-secondary);
+
+    font-size:16px;
+
+    margin-bottom:30px;
+
+    line-height:1.6;
+
+}
+
+.form-row{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:20px;
+
+    margin-bottom:20px;
+
+}
+
+.form-group{
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+.form-group label{
+
+    font-weight:500;
+
+    color:var(--text-primary);
+
+    margin-bottom:8px;
+
+}
+
+.form-group input,
+
+.form-group select,
+
+.form-group textarea{
+
+    width:100%;
+
+    padding:14px;
+
+    border:1px solid var(--border);
+
+    border-radius:12px;
+
+    outline:none;
+
+    font-size:15px;
+
+    font-family:'Poppins',sans-serif;
+
+    transition:.3s;
+
+    background:var(--input-bg);
+
+    color:var(--text-primary);
+
+}
+
+.form-group textarea{
+
+    resize:none;
+
+    min-height:120px;
+
+}
+
+.form-group input:focus,
+
+.form-group select:focus,
+
+.form-group textarea:focus{
+
+    border-color:var(--primary);
+
+    box-shadow:0 0 0 3px rgba(99,102,241,.15);
+
+}
+/* ==========================================
+   BUTTONS
+========================================== */
+
+.buttons{
+
+    display:flex;
+
+    gap:20px;
+
+    margin-top:30px;
+
+}
+
+.buttons button{
+
+    flex:1;
+
+    padding:15px;
+
+    border:none;
+
+    border-radius:12px;
+
+    cursor:pointer;
+
+    font-size:16px;
+
+    font-weight:600;
+
+    transition:.3s;
+
+}
+
+.buttons button:first-child{
+
+    background:#6366F1;
+
+    color:#FFFFFF;
+
+}
+
+.buttons button:first-child:hover{
+
+    background:#4F46E5;
+
+}
+
+.cancel{
+
+    background:#E5E7EB;
+
+    color:#111827;
+
+}
+
+.cancel:hover{
+
+    background:#D1D5DB;
+
+}
+
+/* ==========================================
+   EXPENSE HISTORY PAGE
+========================================== */
+
+.expense-history{
+
+    padding:35px;
+
+}
+
+.expense-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:flex-start;
+
+    margin-bottom:35px;
+
+}
+
+.header-text{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:8px;
+
+}
+
+.header-text h2{
+
+    font-size:36px;
+
+    font-weight:700;
+
+    color:var(--text-primary);
+
+    margin:0;
+
+}
+
+.add-btn{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    text-decoration:none;
+
+    background:#6366F1;
+
+    color:#FFFFFF;
+
+    padding:14px 22px;
+
+    border-radius:12px;
+
+    font-weight:600;
+
+    transition:.3s;
+
+}
+
+.add-btn:hover{
+
+    background:#4F46E5;
+
+}
+
+/* ==========================================
+   FILTER SECTION
+========================================== */
+
+.expense-filters{
+
+    display:grid;
+
+    grid-template-columns:2fr 1fr 1fr;
+
+    gap:20px;
+
+    margin:35px 0;
+
+}
+
+.expense-filters input,
+
+.expense-filters select{
+
+    padding:14px;
+
+    border:1px solid var(--border);
+
+    border-radius:12px;
+
+    outline:none;
+
+    font-size:15px;
+
+    font-family:'Poppins',sans-serif;
+
+    transition:.3s;
+
+    background:var(--input-bg);
+
+    color:var(--text-primary);
+
+}
+
+.expense-filters input:focus,
+
+.expense-filters select:focus{
+
+    border-color:var(--primary);
+
+    box-shadow:0 0 0 3px rgba(99,102,241,.15);
+
+}
+/* ==========================================
+   EXPENSE TABLE
+========================================== */
+
+.expense-table{
+
+    background:var(--card);
+
+    border-radius:18px;
+
+    overflow:hidden;
+
+    box-shadow:0 10px 30px rgba(0,0,0,.06);
+
+    border:1px solid var(--border);
+
+}
+
+.expense-table table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+}
+
+.expense-table thead{
+
+    background:var(--hover-bg);
+
+}
+
+.expense-table th{
+
+    padding:18px;
+
+    text-align:left;
+
+    font-size:15px;
+
+    color:var(--text-primary);
+
+    font-weight:600;
+
+}
+
+.expense-table td{
+
+    padding:18px;
+
+    border-top:1px solid var(--border);
+
+    color:var(--text-primary);
+
+}
+
+.expense-table tbody tr{
+
+    transition:.3s;
+
+}
+
+.expense-table tbody tr:hover{
+
+    background:var(--hover-bg);
+
+}
+
+/* ==========================================
+   STATUS BADGE
+========================================== */
+
+.completed{
+
+    display:inline-block;
+
+    background:#DCFCE7;
+
+    color:#15803D;
+
+    padding:6px 14px;
+
+    border-radius:30px;
+
+    font-size:13px;
+
+    font-weight:600;
+
+}
+
+/* ==========================================
+   ACTION BUTTONS
+========================================== */
+
+.edit-btn,
+
+.delete-btn{
+
+    width:40px;
+
+    height:40px;
+
+    border:none;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    transition:.3s;
+
+    margin-right:8px;
+
+}
+
+.edit-btn{
+
+    background:#6366F1;
+
+    color:#FFFFFF;
+
+}
+
+.edit-btn:hover{
+
+    background:#4F46E5;
+
+}
+
+.delete-btn{
+
+    background:#EF4444;
+
+    color:#FFFFFF;
+
+}
+
+.delete-btn:hover{
+
+    background:#DC2626;
+
+}
+
+/* ==========================================
+   RESPONSIVE TABLE
+========================================== */
+
+.expense-table{
+
+    overflow-x:auto;
+
+}

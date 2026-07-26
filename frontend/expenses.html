@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Expenses | Expense Tracker</title>
+
+    <!-- Google Font -->
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet">
+
+    <!-- Font Awesome -->
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <!-- ===== ANTI-FOUC: Apply user-specific theme BEFORE first paint ===== -->
+    <script>
+        (function() {
+            var userId = null;
+            try {
+                var stored = localStorage.getItem("currentUser");
+                if (stored) {
+                    var user = JSON.parse(stored);
+                    if (user && user.id) userId = user.id;
+                }
+            } catch(e) {}
+            var theme = userId ? localStorage.getItem("theme_" + userId) : null;
+            if (theme === "dark") {
+                document.documentElement.classList.add("dark-mode");
+                var style = document.createElement("style");
+                style.textContent = "html.dark-mode{--dark:#FFFFFF;--gray:#D1D5DB;--border:#374151;--background:#111827;--card:#1F2937;--sidebar-bg:#111827;--navbar-bg:#111827;--input-bg:#374151;--text-primary:#FFFFFF;--text-secondary:#D1D5DB;--hover-bg:#1F2937;--primary-light:rgba(99,102,241,0.15)}";
+                document.head.insertBefore(style, document.head.querySelector('link[rel="stylesheet"]'));
+            }
+        })();
+    </script>
+
+    <!-- CSS -->
+
+    <link rel="stylesheet"
+          href="css/dashboard.css">
+
+    <link rel="stylesheet"
+          href="css/expense.css">
+
+    <link rel="stylesheet"
+          href="css/responsive.css">
+
+    <!-- Toast & Modal CSS -->
+    <link rel="stylesheet" href="css/toast.css">
+    <link rel="stylesheet" href="css/modal.css">
+
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+<!-- ================= Sidebar ================= -->
+
+<aside class="sidebar">
+
+<div class="logo">
+
+<div class="logo-icon">
+
+<i class="fa-solid fa-wallet"></i>
+
+</div>
+
+<h2>Expense Tracker</h2>
+
+</div>
+
+<nav>
+
+<ul>
+
+<li>
+
+<a href="dashboard.html">
+
+<i class="fa-solid fa-house"></i>
+
+<span>Dashboard</span>
+
+</a>
+
+</li>
+
+<li>
+
+<a href="add_expense.html">
+
+<i class="fa-solid fa-plus"></i>
+
+<span>Add Expense</span>
+
+</a>
+
+</li>
+
+<li>
+
+
+<a href="expenses.html">
+
+<i class="fa-solid fa-receipt"></i>
+
+<span>Expenses</span>
+
+</a>
+
+</li>
+
+<li>
+
+<a href="categories.html">
+
+<i class="fa-solid fa-layer-group"></i>
+
+<span>Categories</span>
+
+</a>
+
+</li>
+
+
+<li>
+
+<a href="reports.html">
+
+<i class="fa-solid fa-chart-pie"></i>
+
+<span>Reports</span>
+
+</a>
+
+</li>
+
+
+<li>
+
+<a href="budget.html">
+
+<i class="fa-solid fa-wallet"></i>
+
+<span>Budget</span>
+
+</a>
+
+</li>
+
+
+<li>
+
+<a href="profile.html">
+
+<i class="fa-solid fa-user"></i>
+
+<span>Profile</span>
+
+</a>
+
+</li>
+
+<li>
+
+<a href="settings.html">
+
+<i class="fa-solid fa-gear"></i>
+
+<span>Settings</span>
+
+</a>
+
+</li>
+
+</ul>
+
+</nav>
+
+<div class="logout">
+
+<i class="fa-solid fa-right-from-bracket"></i>
+
+<span>Logout</span>
+
+</div>
+
+</aside>
+
+<!-- ================= Main ================= -->
+
+<main class="main-content">
+
+<header class="navbar">
+
+<div class="nav-left">
+
+<button class="menu-btn">
+
+<i class="fa-solid fa-bars"></i>
+
+</button>
+
+</div>
+
+    <div class="nav-right">
+
+        <div class="profile" id="profileDropdown">
+
+            <img
+                id="navProfileAvatar"
+                src="assets/images/default-avatar.png"
+                alt="Profile"
+                onerror="this.onerror=null;this.src='assets/images/default-avatar.png'"
+            >
+
+            <span class="profile-name" id="navUserName">User</span>
+
+            <i class="fa-solid fa-chevron-down"></i>
+
+            <div class="dropdown-menu">
+                <a href="profile.html" class="dropdown-item">
+                    <i class="fa-solid fa-user"></i>
+                    <span>My Profile</span>
+                </a>
+                <a href="settings.html" class="dropdown-item">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Settings</span>
+                </a>
+                <div class="dropdown-divider"></div>
+                <a href="#" class="dropdown-item dropdown-logout" id="dropdownLogoutBtn">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+
+        </div>
+
+    </div>
+
+</header>
+<!-- ================= Expense History ================= -->
+
+<section class="expense-history">
+
+    <div class="expense-header">
+
+        <div class="header-text">
+
+            <h2>Expense History</h2>
+
+            <p class="page-description">
+
+                View, search and manage all your expenses.
+
+            </p>
+
+        </div>
+
+        <a href="add_expense.html" class="add-btn">
+
+            <i class="fa-solid fa-plus"></i>
+
+            Add Expense
+
+        </a>
+
+    </div>
+
+    <!-- Filters -->
+
+    <div class="expense-filters">
+
+        <div class="search-box">
+            <i class="fa-solid fa-search"></i>
+            <input
+                type="text"
+                id="expense-search"
+                placeholder="Search expenses...">
+        </div>
+
+        <select id="expense-category">
+
+            <option value="">All Categories</option>
+
+        </select>
+
+        <input type="date" id="expense-date">
+
+    </div>
+
+    <!-- Expense Table -->
+
+    <div class="expense-table">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+<!-- ================= Footer ================= -->
+
+<footer class="footer">
+
+    <p>
+
+        © 2026 Expense Tracker | All Rights Reserved
+
+    </p>
+
+</footer>
+
+</main>
+
+</div>
+
+<!-- JavaScript -->
+
+<script src="js/toast.js"></script>
+<script src="js/modal.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/app.js"></script>
+<script src="js/expense.js"></script>
+
+</body>
+
+</html>

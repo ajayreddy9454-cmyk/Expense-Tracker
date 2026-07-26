@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Profile | Expense Tracker</title>
+
+    <!-- Google Font -->
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet">
+
+    <!-- Font Awesome -->
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <!-- ===== ANTI-FOUC: Apply user-specific theme BEFORE first paint ===== -->
+    <script>
+        (function() {
+            var userId = null;
+            try {
+                var stored = localStorage.getItem("currentUser");
+                if (stored) {
+                    var user = JSON.parse(stored);
+                    if (user && user.id) userId = user.id;
+                }
+            } catch(e) {}
+            var theme = userId ? localStorage.getItem("theme_" + userId) : null;
+            if (theme === "dark") {
+                document.documentElement.classList.add("dark-mode");
+                var style = document.createElement("style");
+                style.textContent = "html.dark-mode{--dark:#FFFFFF;--gray:#D1D5DB;--border:#374151;--background:#111827;--card:#1F2937;--sidebar-bg:#111827;--navbar-bg:#111827;--input-bg:#374151;--text-primary:#FFFFFF;--text-secondary:#D1D5DB;--hover-bg:#1F2937;--primary-light:rgba(99,102,241,0.15)}";
+                document.head.insertBefore(style, document.head.querySelector('link[rel="stylesheet"]'));
+            }
+        })();
+    </script>
+
+    <!-- CSS -->
+
+    <link rel="stylesheet"
+          href="css/dashboard.css">
+
+    <link rel="stylesheet"
+          href="css/profile.css">
+
+    <link rel="stylesheet"
+          href="css/responsive.css">
+
+    <!-- Toast & Modal CSS -->
+    <link rel="stylesheet" href="css/toast.css">
+    <link rel="stylesheet" href="css/modal.css">
+
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+    <!-- Sidebar -->
+
+    <aside class="sidebar">
+
+      <div class="logo">
+
+    <div class="logo-icon">
+
+        <i class="fa-solid fa-wallet"></i>
+
+    </div>
+
+    <h2>Expense Tracker</h2>
+
+</div>
+
+
+<nav>
+
+    <ul>
+
+       <li>
+
+    <a href="dashboard.html">
+
+        <i class="fa-solid fa-house"></i>
+
+        <span>Dashboard</span>
+
+    </a>
+
+</li>
+
+        <li>
+
+            <a href="add_expense.html">
+
+                <i class="fa-solid fa-plus"></i>
+
+                <span>Add Expense</span>
+
+            </a>
+
+        </li>
+
+
+
+        <li>
+
+            <a href="expenses.html">
+
+                <i class="fa-solid fa-receipt"></i>
+
+                <span>Expenses</span>
+
+            </a>
+
+        </li>
+
+        <li>
+
+            <a href="categories.html">
+
+                <i class="fa-solid fa-layer-group"></i>
+
+                <span>Categories</span>
+
+            </a>
+
+        </li>
+
+        <li>
+
+            <a href="reports.html">
+
+                <i class="fa-solid fa-chart-pie"></i>
+
+                <span>Reports</span>
+
+            </a>
+
+        </li>
+
+        <li>
+
+            <a href="budget.html">
+
+                <i class="fa-solid fa-wallet"></i>
+
+                <span>Budget</span>
+
+            </a>
+
+        </li>
+
+        <li>
+
+            <a href="profile.html">
+
+                <i class="fa-solid fa-user"></i>
+
+                <span>Profile</span>
+
+            </a>
+
+        </li>
+
+        <li>
+
+            <a href="settings.html">
+
+                <i class="fa-solid fa-gear"></i>
+
+                <span>Settings</span>
+
+            </a>
+
+        </li>
+
+
+    </ul>
+
+</nav>
+
+
+<div class="logout">
+
+    <i class="fa-solid fa-right-from-bracket"></i>
+
+    <span>Logout</span>
+
+</div>
+
+    </aside>
+
+
+    <main class="main-content">
+
+        <!-- Navbar -->
+
+        <header class="navbar">
+
+            <div class="nav-left">
+
+                <button class="menu-btn">
+
+                    <i class="fa-solid fa-bars"></i>
+
+                </button>
+
+            </div>
+
+            <div class="nav-right">
+
+                <div class="profile" id="profileDropdown">
+
+                    <img
+                        id="navProfileAvatar"
+                        src="assets/images/default-avatar.png"
+                        alt="Profile"
+                        onerror="this.onerror=null;this.src='assets/images/default-avatar.png'"
+                    >
+
+                    <span class="profile-name" id="navUserName">User</span>
+
+                    <i class="fa-solid fa-chevron-down"></i>
+
+                    <div class="dropdown-menu">
+                        <a href="profile.html" class="dropdown-item">
+                            <i class="fa-solid fa-user"></i>
+                            <span>My Profile</span>
+                        </a>
+                        <a href="settings.html" class="dropdown-item">
+                            <i class="fa-solid fa-gear"></i>
+                            <span>Settings</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item dropdown-logout" id="dropdownLogoutBtn">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+
+                </div>
+
+        </header>
+
+        <!-- ============================
+             PROFILE CONTENT
+             ============================ -->
+
+        <section class="profile-page">
+
+            <!-- Section 1: Profile Header (Hero Card) -->
+            <div class="profile-header-card">
+                <div class="profile-header-left">
+                    <div class="profile-avatar-wrapper">
+                        <div class="avatar-clickable" id="avatarClickable" title="Change photo">
+                            <img id="profileHeaderAvatar"
+                                 src="assets/images/default-avatar.png"
+                                 alt="Profile"
+                                 class="profile-header-avatar"
+                                 onerror="this.onerror=null;this.src='assets/images/default-avatar.png'">
+                            <div class="avatar-overlay">
+                                <i class="fa-solid fa-camera"></i>
+                                <span>Change Photo</span>
+                            </div>
+                        </div>
+                        <input type="file"
+                               id="avatarInput"
+                               accept="image/png, image/jpg, image/jpeg, image/gif, image/webp"
+                               style="display:none;">
+                    </div>
+                    <div class="profile-header-info">
+                        <h2 id="profileHeaderName">Full Name</h2>
+                        <p id="profileHeaderEmail">email@example.com</p>
+                        <div class="profile-header-meta">
+                            <span><i class="fa-regular fa-calendar"></i> Member since: <span id="profileMemberSince">---</span></span>
+                            <span class="status-badge"><i class="fa-solid fa-check-circle"></i> Active</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="avatarMessage" class="form-message" style="display:none;"></div>
+            </div>
+
+            <!-- Section 2: Personal Information -->
+            <div class="profile-section-card">
+                <div class="profile-section-title">
+                    <i class="fa-solid fa-user-pen"></i>
+                    <h3>Personal Information</h3>
+                </div>
+                <form id="personalInfoForm" class="profile-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Full Name <span class="required">*</span></label>
+                            <input type="text"
+                                   id="inputFullName"
+                                   placeholder="Enter your full name"
+                                   required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <input type="email"
+                                   id="inputEmail"
+                                   readonly
+                                   class="readonly-input">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input type="tel"
+                                   id="inputPhone"
+                                   placeholder="Enter your phone number">
+                        </div>
+                        <div class="form-group">
+                            <label>Country</label>
+                            <input type="text"
+                                   id="inputCountry"
+                                   placeholder="Enter your country">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Occupation</label>
+                            <input type="text"
+                                   id="inputOccupation"
+                                   placeholder="Enter your occupation">
+                        </div>
+                        <div class="form-group">
+                            <label>Date of Birth</label>
+                            <input type="date"
+                                   id="inputDob">
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary" id="saveInfoBtn">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Changes
+                        </button>
+                        <button type="button" class="btn-secondary" id="cancelInfoBtn">
+                            Cancel
+                        </button>
+                    </div>
+                    <div id="infoMessage" class="form-message" style="display:none;"></div>
+                </form>
+            </div>
+
+            <!-- Section 3: About Me -->
+            <div class="profile-section-card">
+                <div class="profile-section-title">
+                    <i class="fa-solid fa-pen"></i>
+                    <h3>About Me</h3>
+                </div>
+                <div class="about-me-wrapper">
+                    <textarea id="inputAboutMe"
+                              rows="5"
+                              placeholder="Write something about yourself..."></textarea>
+                    <div class="form-actions">
+                        <button type="button" class="btn-primary" id="saveAboutBtn">
+                            <i class="fa-solid fa-floppy-disk"></i> Save
+                        </button>
+                    </div>
+                    <div id="aboutMessage" class="form-message" style="display:none;"></div>
+                </div>
+            </div>
+
+            <!-- Section 4: Account Statistics -->
+            <div class="profile-section-card">
+                <div class="profile-section-title">
+                    <i class="fa-solid fa-chart-simple"></i>
+                    <h3>Account Statistics</h3>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-icon stat-icon-expenses">
+                            <i class="fa-solid fa-receipt"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h4 id="statTotalExpenses">0</h4>
+                            <p>Total Expenses</p>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon stat-icon-categories">
+                            <i class="fa-solid fa-layer-group"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h4 id="statCategoriesUsed">0</h4>
+                            <p>Categories Used</p>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon stat-icon-budgets">
+                            <i class="fa-solid fa-wallet"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h4 id="statBudgetsCreated">0</h4>
+                            <p>Budgets Created</p>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon stat-icon-member">
+                            <i class="fa-regular fa-calendar"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h4 id="statMemberSince">---</h4>
+                            <p>Member Since</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 5: Change Password -->
+            <div class="profile-section-card">
+                <div class="profile-section-title">
+                    <i class="fa-solid fa-lock"></i>
+                    <h3>Change Password</h3>
+                </div>
+                <form id="passwordForm" class="profile-form password-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Current Password</label>
+                            <input type="password"
+                                   id="inputCurrentPassword"
+                                   placeholder="Enter current password"
+                                   required>
+                        </div>
+                        <div class="form-group">
+                            <label>New Password</label>
+                            <input type="password"
+                                   id="inputNewPassword"
+                                   placeholder="Enter new password"
+                                   required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Confirm New Password</label>
+                            <input type="password"
+                                   id="inputConfirmPassword"
+                                   placeholder="Confirm new password"
+                                   required>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary" id="changePasswordBtn">
+                            <i class="fa-solid fa-key"></i> Change Password
+                        </button>
+                    </div>
+                    <div id="passwordMessage" class="form-message" style="display:none;"></div>
+                </form>
+            </div>
+
+        </section>
+
+        <!-- Footer -->
+
+        <footer class="footer">
+
+            <p>
+
+                © 2026 Expense Tracker | All Rights Reserved
+
+            </p>
+
+        </footer>
+
+    </main>
+
+</div>
+
+<script src="js/toast.js"></script>
+<script src="js/modal.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/app.js"></script>
+<script src="js/profile.js"></script>
+
+</body>
+
+</html>
+

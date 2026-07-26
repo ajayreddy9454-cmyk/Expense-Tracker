@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Categories | Expense Tracker</title>
+
+    <!-- Google Font -->
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet">
+
+    <!-- Font Awesome -->
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <!-- ===== ANTI-FOUC: Apply user-specific theme BEFORE first paint ===== -->
+    <script>
+        (function() {
+            var userId = null;
+            try {
+                var stored = localStorage.getItem("currentUser");
+                if (stored) {
+                    var user = JSON.parse(stored);
+                    if (user && user.id) userId = user.id;
+                }
+            } catch(e) {}
+            var theme = userId ? localStorage.getItem("theme_" + userId) : null;
+            if (theme === "dark") {
+                document.documentElement.classList.add("dark-mode");
+                var style = document.createElement("style");
+                style.textContent = "html.dark-mode{--dark:#FFFFFF;--gray:#D1D5DB;--border:#374151;--background:#111827;--card:#1F2937;--sidebar-bg:#111827;--navbar-bg:#111827;--input-bg:#374151;--text-primary:#FFFFFF;--text-secondary:#D1D5DB;--hover-bg:#1F2937;--primary-light:rgba(99,102,241,0.15)}";
+                document.head.insertBefore(style, document.head.querySelector('link[rel="stylesheet"]'));
+            }
+        })();
+    </script>
+
+    <!-- CSS -->
+
+    <link rel="stylesheet"
+          href="css/dashboard.css">
+
+    <link rel="stylesheet"
+          href="css/categories.css">
+
+    <link rel="stylesheet"
+          href="css/responsive.css">
+
+    <!-- Toast & Modal CSS -->
+    <link rel="stylesheet" href="css/toast.css">
+    <link rel="stylesheet" href="css/modal.css">
+
+    <style>
+        .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:999;justify-content:center;align-items:center;}
+        .modal-overlay.active{display:flex;}
+        .modal{background:var(--card);border-radius:20px;padding:30px;width:420px;max-width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.2);border:1px solid var(--border);}
+        .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+        .modal-header h3{font-size:22px;color:var(--text-primary);}
+        .modal-close-btn{background:none;border:none;font-size:28px;cursor:pointer;color:var(--text-secondary);}
+        .modal-close-btn:hover{color:var(--text-primary);}
+        .modal-body label{display:block;font-size:14px;font-weight:500;color:var(--text-primary);margin-bottom:6px;}
+        .modal-body input{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:12px;font-size:15px;margin-bottom:16px;box-sizing:border-box;background:var(--input-bg);color:var(--text-primary);}
+        .modal-body input:focus{outline:none;border-color:var(--primary);}
+        .modal-footer{display:flex;justify-content:flex-end;gap:12px;margin-top:8px;}
+        .modal-cancel-btn{padding:12px 24px;border:1px solid var(--border);border-radius:12px;background:var(--card);cursor:pointer;font-size:15px;font-weight:500;color:var(--text-primary);}
+        .modal-save-btn{padding:12px 24px;border:none;border-radius:12px;background:#6366F1;color:#fff;cursor:pointer;font-size:15px;font-weight:600;}
+        .modal-save-btn:hover{background:#4F46E5;}
+        .category-card-actions{display:flex;justify-content:center;gap:10px;margin-top:15px;}
+        .category-card-actions button{padding:6px 14px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;}
+        .category-edit-btn{background:var(--primary-light);color:var(--primary);}
+        .category-edit-btn:hover{background:#E0E7FF;}
+        .category-delete-btn{background:#FEF2F2;color:#EF4444;}
+        .category-delete-btn:hover{background:#FEE2E2;}
+        body.dark-mode .category-delete-btn{background:rgba(239,68,68,0.15);}
+        body.dark-mode .category-delete-btn:hover{background:rgba(239,68,68,0.25);}
+        body.dark-mode .category-edit-btn:hover{background:rgba(99,102,241,0.25);}
+    </style>
+
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+    <!-- Copy the SAME Sidebar from dashboard.html -->
+
+    <aside class="sidebar">
+
+      <div class="logo">
+
+    <div class="logo-icon">
+
+        <i class="fa-solid fa-wallet"></i>
+
+    </div>
+
+    <h2>Expense Tracker</h2>
+
+</div>
+
+
+<nav>
+
+    <ul>
+
+        <li>
+            <a href="dashboard.html">
+
+        <i class="fa-solid fa-house"></i>
+
+        <span>Dashboard</span>
+
+    </a>
+
+</li>
+
+
+        <li>
+
+            <a href="add_expense.html">
+
+
+
+                <i class="fa-solid fa-plus"></i>
+
+                <span>Add Expense</span>
+
+            </a>
+
+        </li>
+
+
+        <li>
+
+            <a href="expenses.html">
+
+                <i class="fa-solid fa-receipt"></i>
+
+                <span>Expenses</span>
+
+            </a>
+
+        </li>
+
+
+        <li>
+
+            <a href="categories.html">
+
+                <i class="fa-solid fa-layer-group"></i>
+
+                <span>Categories</span>
+
+            </a>
+
+        </li>
+
+
+        <li>
+
+            <a href="reports.html">
+
+                <i class="fa-solid fa-chart-pie"></i>
+
+                <span>Reports</span>
+
+            </a>
+
+        </li>
+
+        <li>
+
+            <a href="budget.html">
+
+                <i class="fa-solid fa-wallet"></i>
+
+                <span>Budget</span>
+
+            </a>
+
+        </li>
+
+        <li>
+
+            <a href="profile.html">
+
+                <i class="fa-solid fa-user"></i>
+
+                <span>Profile</span>
+
+            </a>
+
+        </li>
+
+        <li>
+
+            <a href="settings.html">
+
+                <i class="fa-solid fa-gear"></i>
+
+                <span>Settings</span>
+
+            </a>
+
+        </li>
+
+
+    </ul>
+
+</nav>
+
+
+<div class="logout">
+
+    <i class="fa-solid fa-right-from-bracket"></i>
+
+    <span>Logout</span>
+
+</div>
+
+    </aside>
+
+    <main class="main-content">
+
+        <!-- Copy the SAME Navbar from dashboard.html -->
+
+            <header class="navbar">
+
+    <!-- Left -->
+
+    <div class="nav-left">
+
+        <button class="menu-btn">
+
+            <i class="fa-solid fa-bars"></i>
+
+        </button>
+
+        <div class="search-box">
+
+            <i class="fa-solid fa-magnifying-glass"></i>
+
+            <input
+                type="text"
+                id="category-search"
+                placeholder="Search categories..."
+            >
+
+        </div>
+
+    </div>
+
+    <!-- Right -->
+
+    <div class="nav-right">
+
+        <div class="profile" id="profileDropdown">
+
+            <img
+                id="navProfileAvatar"
+                src="assets/images/default-avatar.png"
+                alt="Profile"
+                onerror="this.onerror=null;this.src='assets/images/default-avatar.png'"
+            >
+
+            <span class="profile-name" id="navUserName">User</span>
+
+            <i class="fa-solid fa-chevron-down"></i>
+
+            <div class="dropdown-menu">
+                <a href="profile.html" class="dropdown-item">
+                    <i class="fa-solid fa-user"></i>
+                    <span>My Profile</span>
+                </a>
+                <a href="settings.html" class="dropdown-item">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Settings</span>
+                </a>
+                <div class="dropdown-divider"></div>
+                <a href="#" class="dropdown-item dropdown-logout" id="dropdownLogoutBtn">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+
+        </div>
+
+    </div>
+
+</header>
+
+        <section class="categories-page">
+
+            <div class="categories-header">
+
+                <div>
+
+                    <h2>Expense Categories</h2>
+
+                    <p class="page-description">
+
+                        Manage all your expense categories.
+
+                    </p>
+
+                </div>
+
+                <button class="add-category-btn" id="add-category-btn">
+
+                    <i class="fa-solid fa-plus"></i>
+
+                    Add Category
+
+                </button>
+
+            </div>
+
+            <div class="categories-grid" id="categories-grid">
+
+        </div>
+
+        </section>
+
+        <!-- ================= Category Modal ================= -->
+
+        <div class="modal-overlay" id="category-modal-overlay">
+
+            <div class="modal">
+
+                <div class="modal-header">
+
+                    <h3 id="modal-title">Add Category</h3>
+
+                    <button class="modal-close-btn" id="modal-close-btn">&times;</button>
+
+                </div>
+
+                <div class="modal-body">
+
+                    <label for="modal-category-name">Category Name</label>
+
+                    <input type="text" id="modal-category-name" placeholder="e.g. Food" />
+
+                    <label for="modal-category-icon">Category Icon</label>
+
+                    <input type="text" id="modal-category-icon" placeholder="e.g. 🍔" />
+
+                </div>
+
+                <div class="modal-footer">
+
+                    <button class="modal-cancel-btn" id="modal-cancel-btn">Cancel</button>
+
+                    <button class="modal-save-btn" id="modal-save-btn">Save</button>
+
+                </div>
+
+            </div>
+
+        </div>
+        <!-- ================= Footer ================= -->
+
+        <footer class="footer">
+
+            <p>
+
+                © 2026 Expense Tracker | All Rights Reserved
+
+            </p>
+
+        </footer>
+
+    </main>
+
+</div>
+
+<script src="js/toast.js"></script>
+<script src="js/modal.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/app.js"></script>
+<script src="js/categories.js"></script>
+
+</body>
+
+</html>

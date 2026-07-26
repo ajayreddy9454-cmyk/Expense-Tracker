@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Dashboard | Expense Tracker</title>
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <!-- ===== ANTI-FOUC: Apply user-specific theme BEFORE first paint ===== -->
+    <script>
+        (function() {
+            var userId = null;
+            try {
+                var stored = localStorage.getItem("currentUser");
+                if (stored) {
+                    var user = JSON.parse(stored);
+                    if (user && user.id) userId = user.id;
+                }
+            } catch(e) {}
+            var theme = userId ? localStorage.getItem("theme_" + userId) : null;
+            if (theme === "dark") {
+                document.documentElement.classList.add("dark-mode");
+                var style = document.createElement("style");
+                style.textContent = "html.dark-mode{--dark:#FFFFFF;--gray:#D1D5DB;--border:#374151;--background:#111827;--card:#1F2937;--sidebar-bg:#111827;--navbar-bg:#111827;--input-bg:#374151;--text-primary:#FFFFFF;--text-secondary:#D1D5DB;--hover-bg:#1F2937;--primary-light:rgba(99,102,241,0.15)}";
+                document.head.insertBefore(style, document.head.querySelector('link[rel="stylesheet"]'));
+            }
+        })();
+    </script>
+
+    <!-- Dashboard CSS -->
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/responsive.css">
+
+    <!-- Toast & Modal CSS -->
+    <link rel="stylesheet" href="css/toast.css">
+    <link rel="stylesheet" href="css/modal.css">
+
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+    <!-- ================= Sidebar ================= -->
+
+    <aside class="sidebar">
+
+      <div class="logo">
+
+    <div class="logo-icon">
+
+        <i class="fa-solid fa-wallet"></i>
+
+    </div>
+
+    <h2>Expense Tracker</h2>
+
+</div>
+
+
+<nav>
+
+    <ul>
+
+<li>
+    <a href="dashboard.html">
+        <i class="fa-solid fa-house"></i>
+        <span>Dashboard</span>
+    </a>
+</li>
+
+        <li>
+
+            <a href="add_expense.html">
+
+                <i class="fa-solid fa-plus"></i>
+
+                <span>Add Expense</span>
+
+            </a>
+
+        </li>
+
+
+        <li>
+
+            <a href="expenses.html">
+
+                <i class="fa-solid fa-receipt"></i>
+
+                <span>Expenses</span>
+
+            </a>
+
+        </li>
+
+
+        <li>
+
+            <a href="categories.html">
+
+                <i class="fa-solid fa-layer-group"></i>
+
+                <span>Categories</span>
+
+            </a>
+
+        </li>
+
+
+        <li>
+
+            <a href="reports.html">
+
+                <i class="fa-solid fa-chart-pie"></i>
+
+                <span>Reports</span>
+
+            </a>
+
+        </li>
+
+
+        <li>
+
+            <a href="budget.html">
+
+                <i class="fa-solid fa-wallet"></i>
+
+                <span>Budget</span>
+
+            </a>
+
+        </li>
+
+
+        <li>
+
+            <a href="profile.html">
+
+                <i class="fa-solid fa-user"></i>
+
+                <span>Profile</span>
+
+            </a>
+
+        </li>
+
+
+        <li>
+
+            <a href="settings.html">
+
+                <i class="fa-solid fa-gear"></i>
+
+                <span>Settings</span>
+
+            </a>
+
+        </li>
+
+
+    </ul>
+
+</nav>
+
+
+<div class="logout">
+
+    <i class="fa-solid fa-right-from-bracket"></i>
+
+    <span>Logout</span>
+
+</div>
+
+    </aside>
+
+    <!-- ================= Main Content ================= -->
+
+    <main class="main-content">
+
+        <!-- ============ Navbar ============ -->
+
+
+            <header class="navbar">
+
+    <!-- Left -->
+
+    <div class="nav-left">
+
+        <button class="menu-btn">
+
+            <i class="fa-solid fa-bars"></i>
+
+        </button>
+
+    </div>
+
+    <!-- Right -->
+
+    <div class="nav-right">
+
+        <div class="profile" id="profileDropdown">
+
+            <img
+                id="navProfileAvatar"
+                src="assets/images/default-avatar.png"
+                alt="Profile"
+                onerror="this.onerror=null;this.src='assets/images/default-avatar.png'"
+            >
+
+            <span class="profile-name" id="navUserName">User</span>
+
+            <i class="fa-solid fa-chevron-down"></i>
+
+            <div class="dropdown-menu">
+                <a href="profile.html" class="dropdown-item">
+                    <i class="fa-solid fa-user"></i>
+                    <span>My Profile</span>
+                </a>
+                <a href="settings.html" class="dropdown-item">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Settings</span>
+                </a>
+                <div class="dropdown-divider"></div>
+                <a href="#" class="dropdown-item dropdown-logout" id="dropdownLogoutBtn">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+
+        </div>
+
+    </div>
+
+</header>
+
+        <!-- ============ Dashboard ============ -->
+
+        <section class="dashboard">
+
+            <!-- Welcome Section -->
+
+            <section class="welcome">
+
+                <div class="welcome-text">
+
+                    <h1>
+                        Good Evening,
+                        <span id="welcomeUserName">User 👋</span>
+                    </h1>
+
+                    <p>
+                        Track your expenses and stay in control of your finances.
+                    </p>
+
+                </div>
+
+                <div class="date-box">
+
+                    <i class="fa-regular fa-calendar"></i>
+
+                    <span>17 July 2026</span>
+
+                </div>
+
+            </section>
+
+<!-- Summary Cards -->
+          <section class="summary-cards">
+
+    <!-- Total Expenses -->
+
+    <div class="card">
+
+        <div class="card-icon balance">
+
+            <i class="fa-solid fa-wallet"></i>
+
+        </div>
+
+        <div class="card-info">
+
+            <h4>Total Expenses</h4>
+
+            <h2 id="total-expenses-value">0</h2>
+
+            <p>Total Records</p>
+
+        </div>
+
+    </div>
+
+    <!-- Total Amount Spent -->
+
+    <div class="card">
+
+        <div class="card-icon expense">
+
+            <i class="fa-solid fa-arrow-trend-down"></i>
+
+        </div>
+
+        <div class="card-info">
+
+            <h4>Total Amount Spent</h4>
+
+            <h2 id="total-amount-spent-value">₹0</h2>
+
+            <p>Lifetime</p>
+
+        </div>
+
+    </div>
+
+    <!-- This Month's Expenses -->
+
+    <div class="card">
+
+        <div class="card-icon savings">
+
+            <i class="fa-solid fa-calendar"></i>
+
+        </div>
+
+        <div class="card-info">
+
+            <h4>This Month's Expenses</h4>
+
+            <h2 id="this-month-expenses-value">₹0</h2>
+
+            <p>Current Month</p>
+
+        </div>
+
+    </div>
+
+    <!-- Categories Used -->
+
+    <div class="card">
+
+        <div class="card-icon income">
+
+            <i class="fa-solid fa-layer-group"></i>
+
+        </div>
+
+        <div class="card-info">
+
+            <h4>Categories Used</h4>
+
+            <h2 id="categories-used-value">0</h2>
+
+            <p>Active Categories</p>
+
+        </div>
+
+    </div>
+
+</section>
+
+            <!-- Top Categories -->
+
+           <section class="charts">
+
+    <div class="category-card">
+
+        <div class="section-header">
+
+            <h3>Top Categories</h3>
+
+        </div>
+
+        <div class="category-list" id="top-categories-list">
+
+        </div>
+
+    </div>
+
+</section>
+
+            <!-- Recent Transactions -->
+
+           <section class="transactions">
+
+    <div class="section-header">
+
+        <h3>Recent Transactions</h3>
+
+        <a href="#">View All</a>
+
+    </div>
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>Title</th>
+
+                <th>Category Name</th>
+
+                <th>Date</th>
+
+                <th>Amount</th>
+
+                <th>Status</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+        </tbody>
+
+    </table>
+
+</section>
+
+        </section>
+        <footer class="footer">
+
+    <p>
+
+        © 2026 Expense Tracker
+
+    </p>
+
+</footer>
+
+    </main>
+
+</div>
+
+<script src="js/toast.js"></script>
+<script src="js/modal.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/app.js"></script>
+<script src="js/dashboard.js"></script>
+
+</body>
+</html>
+
