@@ -18,9 +18,24 @@ UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "static", "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
+def _extract_data():
+    """Extract data from either FormData (multipart) or JSON (application/json).
+
+    If the request has form data (multipart/form-data, typically with file
+    uploads), return that. Otherwise try to parse the body as JSON.
+    This allows the frontend to send expenses as JSON when no file is
+    attached, and as FormData when a receipt file is included.
+    """
+    if request.form and len(request.form) > 0:
+        return request.form.to_dict()
+    data = request.get_json(silent=True)
+    if data:
+        return data
+    return {}
+
+
 def _parse_date(date_str):
     return datetime.strptime(date_str, "%Y-%m-%d").date() if date_str else None
-      
 
 
 def _handle_receipt_upload():
@@ -45,8 +60,7 @@ def add_expense():
         return jsonify({"message": "Authentication required"}), 401
 
     try:
-        data = request.form.to_dict() if request.form else {}
-
+        data = _extract_data()
         receipt_value = _handle_receipt_upload()
 
         title = data.get("title")
@@ -127,7 +141,7 @@ def edit_expense(id):
     if not user:
         return jsonify({"message": "Authentication required"}), 401
 
-    data = request.form.to_dict() if request.form else {}
+    data = _extract_data()
     receipt_value = _handle_receipt_upload()
 
     expense = Expense.query.filter_by(id=id, user_id=user.id).first()

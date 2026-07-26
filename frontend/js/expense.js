@@ -109,13 +109,16 @@ function initializeExpenseForm() {
 try {
             const titleInput = form.querySelector('input[type="text"]');
             const amountInput = form.querySelector('input[type="number"]');
-            const categorySelect = form.querySelector("select");
+            const allSelects = form.querySelectorAll("select");
+            const categorySelect = allSelects[0];
+            const paymentMethodSelect = allSelects[1];
             const dateInput = form.querySelector('input[type="date"]');
             const textarea = form.querySelector("textarea");
 
             const title = titleInput ? titleInput.value.trim() : "";
             const amountStr = amountInput ? amountInput.value : "";
             const category = categorySelect ? categorySelect.value : "";
+            const paymentMethod = paymentMethodSelect ? paymentMethodSelect.value : "Cash";
             const date = dateInput ? dateInput.value : "";
             const notes = textarea ? textarea.value : "";
 
@@ -132,7 +135,7 @@ const payload = {
                 category_id: Number(category),
                 title,
                 amount: Number(amountStr),
-                payment_method: "Cash",
+                payment_method: paymentMethod,
                 expense_date: date,
                 notes
             };
@@ -147,20 +150,31 @@ const isEditing = editingExpenseId !== null;
                     ? receiptInput.files[0]
                     : null;
 
-const formData = new FormData();
-            formData.append("category_id", payload.category_id);
-            formData.append("title", payload.title);
-            formData.append("amount", payload.amount);
-            formData.append("payment_method", payload.payment_method);
-            formData.append("expense_date", payload.expense_date);
-            formData.append("notes", payload.notes);
-            if (file) formData.append("receipt", file);
+let res;
+if (file) {
+    // Send FormData (for file uploads) — browser auto-sets Content-Type
+    const formData = new FormData();
+    formData.append("category_id", payload.category_id);
+    formData.append("title", payload.title);
+    formData.append("amount", payload.amount);
+    formData.append("payment_method", payload.payment_method);
+    formData.append("expense_date", payload.expense_date);
+    formData.append("notes", payload.notes);
+    if (file) formData.append("receipt", file);
 
-const res = await fetch(endpoint, {
-                method,
-                headers: getAuthHeaders(),
-                body: formData
-            });
+    res = await fetch(endpoint, {
+        method,
+        headers: getAuthHeaders(),  // No Content-Type — browser sets multipart boundary
+        body: formData
+    });
+} else {
+    // Send JSON (no file) — simpler, avoids CORS/form-data issues on Render
+    res = await fetch(endpoint, {
+        method,
+        headers: getAuthHeaders("application/json"),
+        body: JSON.stringify(payload)
+    });
+}
 
 if (!res.ok) {
                 const msg = await extractErrorMessage(new Error("Save failed"), res);
