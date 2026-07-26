@@ -100,6 +100,8 @@ function initializeLogin() {
 
             window.location.href = "dashboard.html";
         } catch (err) {
+            console.error("Login Error:", err);
+            alert("Login Error: " + err.message);
             showError("Connection error. Please try again.");
         }
     });
