@@ -85,7 +85,7 @@ async function fetchDashboardSummary() {
 
     try {
 
-        const response = await fetch("http://127.0.0.1:5000/api/dashboard/", {
+        const response = await fetch(`${API_BASE_URL}/api/dashboard/`, {
             headers: getAuthHeaders()
         });
 
@@ -283,4 +283,5 @@ function loadRecentTransactions(recentExpenses) {
     });
 
 }
+
 

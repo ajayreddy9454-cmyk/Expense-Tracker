@@ -365,7 +365,7 @@ function loadNavbarUser() {
 // ======================================
 
 const DEFAULT_AVATAR = "assets/images/default-avatar.png";
-const PROFILE_API_URL = "http://127.0.0.1:5000/api/profile";
+const PROFILE_API_URL = `${API_BASE_URL}/api/profile`;
 
 function getAvatarCacheKey() {
     const userId = getUserIdForStorage();
@@ -420,7 +420,7 @@ async function loadNavbarAvatar() {
             return;
         }
 
-        const src = `http://127.0.0.1:5000${data.profile_image}`;
+        const src = `${API_BASE_URL}${data.profile_image}`;
         navAvatar.src = src;
         navAvatar.onerror = function () {
             if (this.src !== DEFAULT_AVATAR) {
@@ -443,7 +443,7 @@ async function loadNavbarAvatar() {
 
 function updateNavbarAvatar(profileImagePath) {
     const src = (profileImagePath && profileImagePath.trim() !== "")
-        ? `http://127.0.0.1:5000${profileImagePath}`
+        ? `${API_BASE_URL}${profileImagePath}`
         : DEFAULT_AVATAR;
 
     // Update navbar avatar
@@ -474,3 +474,4 @@ function updateNavbarAvatar(profileImagePath) {
     const cacheKey = getAvatarCacheKey();
     localStorage.setItem(cacheKey, src);
 }
+

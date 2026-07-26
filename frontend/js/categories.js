@@ -45,7 +45,7 @@ async function loadCategories() {
 
     try {
 
-        const response = await fetch("http://127.0.0.1:5000/api/categories/", {
+        const response = await fetch(`${API_BASE_URL}/api/categories/`, {
             headers: getAuthHeaders()
         });
 
@@ -234,7 +234,7 @@ if (!name) {
         if (editingCategoryId) {
 
             // UPDATE
-            const response = await fetch(`http://127.0.0.1:5000/api/categories/${editingCategoryId}`, {
+            const response = await fetch(`${API_BASE_URL}/api/categories/${editingCategoryId}`, {
                 method: "PUT",
                 headers: Object.assign({ "Content-Type": "application/json" }, getAuthHeaders()),
                 body: JSON.stringify({ name, icon }),
@@ -255,7 +255,7 @@ if (!name) {
         } else {
 
             // CREATE
-            const response = await fetch("http://127.0.0.1:5000/api/categories/", {
+            const response = await fetch(`${API_BASE_URL}/api/categories/`, {
                 method: "POST",
                 headers: Object.assign({ "Content-Type": "application/json" }, getAuthHeaders()),
                 body: JSON.stringify({ name, icon }),
@@ -317,7 +317,7 @@ async function confirmDelete(id) {
 
     try {
 
-const response = await fetch(`http://127.0.0.1:5000/api/categories/${id}`, {
+const response = await fetch(`${API_BASE_URL}/api/categories/${id}`, {
             method: "DELETE",
             headers: getAuthHeaders()
         });

@@ -4,6 +4,13 @@
 // ======================================
 
 // ======================================
+// Centralized Backend API Base URL
+// Change this single constant when deploying
+// to a different backend server.
+// ======================================
+const API_BASE_URL = "https://expense-tracker-3k39.onrender.com";
+
+// ======================================
 // AUTH HELPERS (shared across all pages)
 // ======================================
 

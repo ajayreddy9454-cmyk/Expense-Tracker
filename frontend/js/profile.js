@@ -3,7 +3,7 @@
 // Profile Script
 // ======================================
 
-const PROFILE_API = "http://127.0.0.1:5000/api/profile";
+const PROFILE_API = `${API_BASE_URL}/api/profile`;
 
 let currentUser = null;
 let profileData = null;
@@ -149,7 +149,7 @@ function updateAvatar(profileImagePath) {
     } else {
         // Fallback if app.js hasn't loaded yet
         const src = (profileImagePath && profileImagePath.trim() !== "")
-            ? `http://127.0.0.1:5000${profileImagePath}`
+            ? `${API_BASE_URL}${profileImagePath}`
             : DEFAULT_AVATAR;
 
         const headerAvatar = document.getElementById("profileHeaderAvatar");
@@ -511,6 +511,7 @@ function showMessageOnPage(message) {
     errorDiv.textContent = message;
     section.prepend(errorDiv);
 }
+
 
 
 

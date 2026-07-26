@@ -6,7 +6,7 @@
 let expenses = [];
 let editingExpenseId = null;
 
-const EXPENSES_API_URL = "http://127.0.0.1:5000/api/expenses/";
+const EXPENSES_API_URL = `${API_BASE_URL}/api/expenses/`;
 
 document.addEventListener("DOMContentLoaded", async () => {
     // Auth guard
@@ -67,7 +67,7 @@ async function loadCategoriesDropdown() {
     if (!select) return;
 
 try {
-        const res = await fetch("http://127.0.0.1:5000/api/categories/", {
+        const res = await fetch(`${API_BASE_URL}/api/categories/`, {
             headers: getAuthHeaders()
         });
         if (!res.ok) throw new Error("Failed to load categories");
@@ -243,7 +243,7 @@ function loadExpenses() {
                 </td>
                 <td>
                     <div class="expense-actions" style="display:flex; gap:8px; align-items:center;">
-                        ${expense.receipt ? `<a href="http://127.0.0.1:5000/static/uploads/${expense.receipt}" target="_blank" rel="noopener">View Receipt</a>` : 'No Receipt'}
+                        ${expense.receipt ? `<a href="${API_BASE_URL}/static/uploads/${expense.receipt}" target="_blank" rel="noopener">View Receipt</a>` : 'No Receipt'}
                         <button class="edit-btn" onclick="editExpense(${expense.id})">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </button>
@@ -382,7 +382,7 @@ async function loadCategoryFilter() {
     if (!select) return;
 
 try {
-        const res = await fetch("http://127.0.0.1:5000/api/categories/", {
+        const res = await fetch(`${API_BASE_URL}/api/categories/`, {
             headers: getAuthHeaders()
         });
         if (!res.ok) throw new Error("Failed to load categories");
@@ -489,7 +489,7 @@ function renderFilteredExpenses(filteredExpenses) {
                 </td>
                 <td>
                     <div class="expense-actions" style="display:flex; gap:8px; align-items:center;">
-                        ${expense.receipt ? `<a href="http://127.0.0.1:5000/static/uploads/${expense.receipt}" target="_blank" rel="noopener">View Receipt</a>` : 'No Receipt'}
+                        ${expense.receipt ? `<a href="${API_BASE_URL}/static/uploads/${expense.receipt}" target="_blank" rel="noopener">View Receipt</a>` : 'No Receipt'}
                         <button class="edit-btn" onclick="editExpense(${expense.id})">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </button>

@@ -3,7 +3,7 @@
 // Settings Script — User-Specific Settings
 // ======================================
 
-const SETTINGS_API = "http://127.0.0.1:5000/api/settings";
+const SETTINGS_API = `${API_BASE_URL}/api/settings`;
 
 let currentUser = null;
 let currentSettings = null;
@@ -199,6 +199,7 @@ function showMessageOnPage(message) {
     errorDiv.textContent = message;
     section.prepend(errorDiv);
 }
+
 
 
 

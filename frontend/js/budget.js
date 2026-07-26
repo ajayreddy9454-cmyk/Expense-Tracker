@@ -42,7 +42,7 @@ async function loadBudgets() {
 
     try {
 
-        const response = await fetch("http://127.0.0.1:5000/api/budgets/", {
+        const response = await fetch(`${API_BASE_URL}/api/budgets/`, {
             headers: getAuthHeaders()
         });
 
@@ -68,7 +68,7 @@ async function loadCategoryDropdown() {
 
     try {
 
-        const response = await fetch("http://127.0.0.1:5000/api/categories/", {
+        const response = await fetch(`${API_BASE_URL}/api/categories/`, {
             headers: getAuthHeaders()
         });
 
@@ -321,7 +321,7 @@ async function saveBudget() {
         if (editingBudgetId) {
 
             // UPDATE
-            const response = await fetch(`http://127.0.0.1:5000/api/budgets/${editingBudgetId}`, {
+            const response = await fetch(`${API_BASE_URL}/api/budgets/${editingBudgetId}`, {
                 method: "PUT",
                 headers: Object.assign({ "Content-Type": "application/json" }, getAuthHeaders()),
                 body: JSON.stringify({ category_id, amount, month, year }),
@@ -342,7 +342,7 @@ async function saveBudget() {
         } else {
 
             // CREATE
-            const response = await fetch("http://127.0.0.1:5000/api/budgets/", {
+            const response = await fetch(`${API_BASE_URL}/api/budgets/`, {
                 method: "POST",
                 headers: Object.assign({ "Content-Type": "application/json" }, getAuthHeaders()),
                 body: JSON.stringify({ category_id, amount, month, year }),
@@ -404,7 +404,7 @@ async function confirmDeleteBudget(id) {
 
     try {
 
-const response = await fetch(`http://127.0.0.1:5000/api/budgets/${id}`, {
+const response = await fetch(`${API_BASE_URL}/api/budgets/${id}`, {
             method: "DELETE",
             headers: getAuthHeaders()
         });
