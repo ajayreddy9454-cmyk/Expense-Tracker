@@ -1,0 +1,31 @@
+# Render Blueprint for Expense Tracker Backend
+# Deploy via: https://dashboard.render.com/blueprints
+# (or use these settings when creating a "Web Service" manually)
+
+services:
+  - type: web
+    name: expense-tracker-3k39
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --workers 2 --threads 4 --timeout 120 --bind 0.0.0.0:$PORT app:app
+    healthCheckPath: /healthz
+    envVars:
+      - key: SECRET_KEY
+        sync: false # set manually
+      - key: DATABASE_URL
+        sync: false # set manually
+      - key: DB_SSL_CA
+        sync: false # set manually
+    # Individual DB_* vars are optional if DATABASE_URL is set
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+
