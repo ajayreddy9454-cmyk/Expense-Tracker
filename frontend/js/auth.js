@@ -35,11 +35,20 @@ function initializeLogin() {
     const form = document.getElementById("loginForm");
     if (!form) return;
 
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+    const button = document.getElementById("loginButton");
+
+    if (!emailInput || !passwordInput || !button) return;
+
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        const email = document.getElementById("email").value.trim();
-        const password = document.getElementById("password").value;
+        // Prevent duplicate submissions while a request is in flight
+        if (button.disabled) return;
+
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
 
         // Check for empty email AND empty password
         if (!email && !password) {
@@ -63,13 +72,15 @@ function initializeLogin() {
         if (!isValidEmail(email)) {
             showError("Invalid credentials. Please check your email and password.");
             // Clear only the password field, keep email
-            document.getElementById("password").value = "";
-            document.getElementById("password").focus();
+            passwordInput.value = "";
+            passwordInput.focus();
             return;
         }
 
+        setButtonLoading(button, true, "Logging in...");
+
         try {
-            const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+            const response = await fetchWithTimeout(`${API_BASE_URL}/api/auth/login`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -83,12 +94,12 @@ function initializeLogin() {
                 const backendMsg = data && (data.message || data.error) ? (data.message || data.error) : "Invalid credentials. Please check your email and password.";
                 showError(backendMsg);
                 // Clear only the password field, keep email
-                document.getElementById("password").value = "";
-                document.getElementById("password").focus();
+                passwordInput.value = "";
+                passwordInput.focus();
                 return;
             }
 
-// Backend returns user + token on success
+            // Backend returns user + token on success
             const user = data && (data.user || data);
             const token = data && data.token;
 
@@ -101,8 +112,11 @@ function initializeLogin() {
             window.location.href = "dashboard.html";
         } catch (err) {
             console.error("Login Error:", err);
-            alert("Login Error: " + err.message);
-            showError("Connection error. Please try again.");
+            const msg = await extractErrorMessage(err, null);
+            showError(msg);
+        } finally {
+            // Always re-enable the button so it is never stuck loading
+            setButtonLoading(button, false);
         }
     });
 }
@@ -116,12 +130,22 @@ function initializeRegister() {
     const form = document.getElementById("registerForm");
     if (!form) return;
 
+    const fullNameInput = document.getElementById("reg_full_name");
+    const emailInput = document.getElementById("reg_email");
+    const passwordInput = document.getElementById("reg_password");
+    const button = document.getElementById("registerButton");
+
+    if (!fullNameInput || !emailInput || !passwordInput || !button) return;
+
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        const full_name = document.getElementById("reg_full_name").value.trim();
-        const email = document.getElementById("reg_email").value.trim();
-        const password = document.getElementById("reg_password").value;
+        // Prevent duplicate submissions while a request is in flight
+        if (button.disabled) return;
+
+        const full_name = fullNameInput.value.trim();
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
 
         // Validate fields
         if (!full_name || !email || !password) {
@@ -135,9 +159,11 @@ function initializeRegister() {
             return;
         }
 
+        setButtonLoading(button, true, "Creating Account...");
+
         try {
             // Register — backend now returns token directly
-            const registerResponse = await fetch(`${API_BASE_URL}/api/auth/register`, {
+            const registerResponse = await fetchWithTimeout(`${API_BASE_URL}/api/auth/register`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -170,24 +196,14 @@ function initializeRegister() {
                 window.location.href = "dashboard.html";
             }, 500);
         } catch (err) {
-            showError("Connection error. Please try again.");
+            console.error("Register Error:", err);
+            const msg = await extractErrorMessage(err, null);
+            showError(msg);
+        } finally {
+            // Always re-enable the button so it is never stuck loading
+            setButtonLoading(button, false);
         }
     });
-}
-
-// ======================================
-// Logout
-// ======================================
-
-function logout() {
-
-    localStorage.removeItem("isLoggedIn");
-    localStorage.removeItem("currentUser");
-    localStorage.removeItem("profile_image_url");
-    localStorage.removeItem("authToken");
-
-    window.location.href = "index.html";
-
 }
 
 function showError(message) {

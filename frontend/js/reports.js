@@ -29,7 +29,7 @@ async function loadReports() {
 
     try {
 
-const response = await fetch(`${API_BASE_URL}/api/reports/`, {
+const response = await fetchWithTimeout(`${API_BASE_URL}/api/reports/`, {
             headers: getAuthHeaders()
         });
 
@@ -105,24 +105,20 @@ function populateMonthlyExpenses(monthlyExpenses) {
 
     }
 
-    rows.forEach(item => {
+    // Build all rows first and write them in a single DOM update
+    tbody.innerHTML = rows.map(item => {
 
         const month = item.month ?? "Unknown";
         const amount = item.amount ?? 0;
 
-        tbody.innerHTML += `
-
+        return `
             <tr>
-
-                <td>${month}</td>
-
+                <td>${escapeHtml(month)}</td>
                 <td>₹${Number(amount).toLocaleString()}</td>
-
             </tr>
-
         `;
 
-    });
+    }).join("");
 
 }
 
@@ -314,7 +310,8 @@ function populateCategorySummary(categoryExpenses) {
 
     }
 
-    rows.forEach(item => {
+    // Build all rows first and write them in a single DOM update
+    tbody.innerHTML = rows.map(item => {
 
         const name = item.category_name ?? "Unknown";
         const amount = item.amount ?? 0;
@@ -322,19 +319,14 @@ function populateCategorySummary(categoryExpenses) {
         // Try to show category icon if available (API may or may not include it)
         const icon = item.category_icon ? item.category_icon + " " : "";
 
-        tbody.innerHTML += `
-
+        return `
             <tr>
-
-                <td>${icon}${name}</td>
-
+                <td>${icon}${escapeHtml(name)}</td>
                 <td>₹${Number(amount).toLocaleString()}</td>
-
             </tr>
-
         `;
 
-    });
+    }).join("");
 
 }
 
@@ -359,7 +351,8 @@ function populateBudgetSummary(budgetSummary) {
 
     }
 
-    rows.forEach(item => {
+    // Build all rows first and write them in a single DOM update
+    tbody.innerHTML = rows.map(item => {
 
         const name = item.category_name ?? "Unknown";
         const budget = item.budget ?? 0;
@@ -374,23 +367,16 @@ function populateBudgetSummary(budgetSummary) {
             remainingClass = "remaining-negative";
         }
 
-        tbody.innerHTML += `
-
+        return `
             <tr>
-
-                <td>${name}</td>
-
+                <td>${escapeHtml(name)}</td>
                 <td>₹${Number(budget).toLocaleString()}</td>
-
                 <td>₹${Number(spent).toLocaleString()}</td>
-
                 <td class="${remainingClass}">₹${Number(remaining).toLocaleString()}</td>
-
             </tr>
-
         `;
 
-    });
+    }).join("");
 
 }
 

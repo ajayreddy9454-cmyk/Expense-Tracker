@@ -270,6 +270,7 @@ function performLogout() {
     // Clear user-specific cached items if we know the user ID
     if (userId) {
         localStorage.removeItem("profile_image_url_" + userId);
+        localStorage.removeItem("profile_image_ts_" + userId);
     }
 
     // Clear sessionStorage
@@ -367,9 +368,18 @@ function loadNavbarUser() {
 const DEFAULT_AVATAR = "assets/images/default-avatar.png";
 const PROFILE_API_URL = `${API_BASE_URL}/api/profile`;
 
+// Cache the avatar for 5 minutes so we don't hit the profile API
+// on every page navigation.
+const AVATAR_CACHE_TTL_MS = 5 * 60 * 1000;
+
 function getAvatarCacheKey() {
     const userId = getUserIdForStorage();
     return userId ? "profile_image_url_" + userId : "profile_image_url";
+}
+
+function getAvatarTimestampKey() {
+    const userId = getUserIdForStorage();
+    return userId ? "profile_image_ts_" + userId : "profile_image_ts";
 }
 
 async function loadNavbarAvatar() {
@@ -404,9 +414,17 @@ async function loadNavbarAvatar() {
 
     if (!userId) return;
 
-    // 3. Fetch from API to get the latest avatar
+    // 3. Cache-first: skip the network call if the cached avatar is fresh.
+    //    This avoids a profile API request on every page navigation.
+    const tsKey = getAvatarTimestampKey();
+    const cachedTs = parseInt(localStorage.getItem(tsKey) || "0", 10);
+    if (cachedSrc && Date.now() - cachedTs < AVATAR_CACHE_TTL_MS) {
+        return;
+    }
+
+    // 4. Fetch from API to get the latest avatar
     try {
-        const response = await fetch(`${PROFILE_API_URL}/`, {
+        const response = await fetchWithTimeout(`${PROFILE_API_URL}/`, {
             headers: getAuthHeaders()
         });
         if (!response.ok) return;
@@ -417,6 +435,7 @@ async function loadNavbarAvatar() {
             navAvatar.src = DEFAULT_AVATAR;
             navAvatar.onerror = null;
             localStorage.removeItem(cacheKey);
+            localStorage.removeItem(tsKey);
             return;
         }
 
@@ -429,8 +448,9 @@ async function loadNavbarAvatar() {
             }
         };
 
-        // Cache in localStorage (user-specific key)
+        // Cache in localStorage (user-specific key) + refresh timestamp
         localStorage.setItem(cacheKey, src);
+        localStorage.setItem(tsKey, String(Date.now()));
     } catch (error) {
         // If API fails but we had cached, keep it
         console.error("Failed to load profile for avatar:", error);
@@ -470,8 +490,10 @@ function updateNavbarAvatar(profileImagePath) {
         };
     }
 
-    // Cache in localStorage (user-specific key)
+    // Cache in localStorage (user-specific key) + refresh timestamp so the
+    // newly updated avatar is treated as fresh and not re-fetched immediately.
     const cacheKey = getAvatarCacheKey();
     localStorage.setItem(cacheKey, src);
+    localStorage.setItem(getAvatarTimestampKey(), String(Date.now()));
 }
 

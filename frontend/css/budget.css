@@ -155,38 +155,6 @@
 
 }
 
-.food-progress{
-
-    width:70%;
-
-    background:#22C55E;
-
-}
-
-.travel-progress{
-
-    width:65%;
-
-    background:#3B82F6;
-
-}
-
-.shopping-progress{
-
-    width:67%;
-
-    background:#F59E0B;
-
-}
-
-.bills-progress{
-
-    width:58%;
-
-    background:#EF4444;
-
-}
-
 .budget-info{
 
     display:flex;

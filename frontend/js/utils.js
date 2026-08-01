@@ -10,6 +10,9 @@
 // ======================================
 const API_BASE_URL = "https://expense-tracker-3k39.onrender.com";
 
+// Default timeout for all API requests (ms)
+const API_TIMEOUT_MS = 15000;
+
 // ======================================
 // AUTH HELPERS (shared across all pages)
 // ======================================
@@ -78,25 +81,118 @@ function authGuard() {
 }
 
 // ======================================
+// Fetch with Timeout (prevents infinite hanging)
+// ======================================
+
+/**
+ * fetch() wrapper that aborts after a configurable timeout so the UI
+ * never hangs forever (e.g. while a free backend cold-starts).
+ *
+ * If the request times out, the promise rejects with an Error whose
+ * `name` is "AbortError" / "TimeoutError". Callers should surface a
+ * friendly message via extractErrorMessage().
+ *
+ * @param {string} url - Request URL
+ * @param {Object} [options] - Standard fetch() options
+ * @param {number} [timeoutMs=API_TIMEOUT_MS] - Timeout in milliseconds
+ * @returns {Promise<Response>}
+ */
+async function fetchWithTimeout(url, options = {}, timeoutMs = API_TIMEOUT_MS) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+        return await fetch(url, Object.assign({}, options, {
+            signal: controller.signal
+        }));
+    } catch (err) {
+        if (err && err.name === "AbortError") {
+            const timeoutError = new Error("Request timed out");
+            timeoutError.name = "TimeoutError";
+            throw timeoutError;
+        }
+        throw err;
+    } finally {
+        clearTimeout(timeoutId);
+    }
+}
+
+// ======================================
+// Button Loading State Helper
+// ======================================
+
+/**
+ * Toggle a button's loading state: disable it, show a spinner, and
+ * change its label. Always restore the original label via finally.
+ *
+ * Usage:
+ *   setButtonLoading(btn, true, "Logging in...");
+ *   try { ... } finally { setButtonLoading(btn, false); }
+ *
+ * @param {HTMLButtonElement} button - The button element
+ * @param {boolean} isLoading - Whether to enter loading state
+ * @param {string} [loadingText] - Text to show while loading
+ */
+function setButtonLoading(button, isLoading, loadingText) {
+    if (!button) return;
+
+    if (isLoading) {
+        // Store original label once so we can restore it later
+        if (!button.dataset.originalText) {
+            button.dataset.originalText = button.textContent;
+        }
+
+        const spinner = document.createElement("span");
+        spinner.className = "button-spinner";
+        spinner.setAttribute("aria-hidden", "true");
+
+        // Keep any existing icon, otherwise just spinner + text
+        const icon = button.querySelector("i, svg, img");
+        const label = loadingText || button.dataset.originalText;
+
+        button.innerHTML = "";
+        if (icon) {
+            button.appendChild(icon);
+        }
+        button.appendChild(spinner);
+        button.appendChild(document.createTextNode(" " + label));
+
+        button.disabled = true;
+        button.classList.add("is-loading");
+    } else {
+        button.innerHTML = button.dataset.originalText || button.textContent;
+        button.disabled = false;
+        button.classList.remove("is-loading");
+        delete button.dataset.originalText;
+    }
+}
+
+// ======================================
 // Reusable Error Message Extractor
 // ======================================
 
 /**
  * Safely extract the most relevant error message from a failed API call.
- * 
+ *
  * Priority:
  * 1. Backend JSON response "message" field (e.g. {"success": false, "message": "..."})
  * 2. Backend JSON response "error" field
- * 3. Fallback for actual network/unreachable errors
- * 
- * Generic JS errors like "Failed to fetch", "TypeError", "NetworkError" 
+ * 3. Response body text (non-HTML)
+ * 4. Fallback for actual network/unreachable/timeout errors
+ *
+ * Generic JS errors like "Failed to fetch", "TypeError", "NetworkError"
  * are NEVER shown to the user.
  *
  * @param {Error} error - The caught error object
  * @param {Response|null} response - The fetch Response object (if available)
- * @returns {string} A user-friendly error message
+ * @returns {Promise<string>} A user-friendly error message
  */
 async function extractErrorMessage(error, response) {
+    // Timeout errors get a dedicated friendly message
+    if (error && (error.name === "TimeoutError" || error.name === "AbortError")) {
+        return "Server is taking longer than expected. Please try again.";
+    }
+
     if (response) {
         try {
             const data = await response.json();
@@ -107,7 +203,7 @@ async function extractErrorMessage(error, response) {
                 return data.error;
             }
         } catch (e) {
-            // Response wasn't JSON - fall through to error-based handling
+            // Response wasn't JSON - fall through to text-based handling
         }
     }
 
@@ -125,7 +221,7 @@ async function extractErrorMessage(error, response) {
     }
 
     if (!response && error) {
-        return "Unable to connect to the server. Please check your connection.";
+        return "Unable to connect to the server. Please try again.";
     }
 
     if (error && error.message) {
@@ -148,6 +244,6 @@ async function extractErrorMessage(error, response) {
         }
     }
 
-    return "Unable to connect to the server. Please check your connection.";
+    return "Unable to connect to the server. Please try again.";
 }
 

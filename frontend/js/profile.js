@@ -43,7 +43,7 @@ async function loadProfile() {
     }
 
     try {
-        const response = await fetch(`${PROFILE_API}/`, {
+        const response = await fetchWithTimeout(`${PROFILE_API}/`, {
             headers: getAuthHeaders()
         });
         const data = await response.json();
@@ -235,6 +235,9 @@ function setupEventListeners() {
 async function handleSavePersonalInfo(e) {
     e.preventDefault();
 
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    if (submitBtn && submitBtn.disabled) return;
+
     const fullName = document.getElementById("inputFullName").value.trim();
     const phone = document.getElementById("inputPhone").value.trim();
     const country = document.getElementById("inputCountry").value.trim();
@@ -254,14 +257,18 @@ async function handleSavePersonalInfo(e) {
         date_of_birth: dateOfBirth || "",
     };
 
-try {
-        const response = await fetch(`${PROFILE_API}/`, {
+    if (submitBtn) {
+        setButtonLoading(submitBtn, true, "Saving...");
+    }
+
+    try {
+        const response = await fetchWithTimeout(`${PROFILE_API}/`, {
             method: "PUT",
             headers: Object.assign({ "Content-Type": "application/json" }, getAuthHeaders()),
             body: JSON.stringify(payload),
         });
 
-        const data = await response.json();
+        const data = await response.json().catch(() => null);
 
         if (response.ok) {
             showFormMessage("infoMessage", "Profile updated successfully!", "success");
@@ -277,6 +284,10 @@ try {
         console.error("Save profile error:", error);
         const msg = await extractErrorMessage(error, null);
         showFormMessage("infoMessage", msg, "error");
+    } finally {
+        if (submitBtn) {
+            setButtonLoading(submitBtn, false);
+        }
     }
 }
 
@@ -300,6 +311,9 @@ function handleCancelInfo() {
 // ======================================
 
 async function handleSaveAbout() {
+    const submitBtn = document.getElementById("saveAboutBtn");
+    if (submitBtn && submitBtn.disabled) return;
+
     const aboutMe = document.getElementById("inputAboutMe").value.trim();
 
     // Save about_me via PUT – include full_name too so backend doesn't null it
@@ -310,25 +324,33 @@ async function handleSaveAbout() {
         about_me: aboutMe || "",
     };
 
-try {
-        const response = await fetch(`${PROFILE_API}/`, {
+    if (submitBtn) {
+        setButtonLoading(submitBtn, true, "Saving...");
+    }
+
+    try {
+        const response = await fetchWithTimeout(`${PROFILE_API}/`, {
             method: "PUT",
             headers: Object.assign({ "Content-Type": "application/json" }, getAuthHeaders()),
             body: JSON.stringify(payload),
         });
 
-        const data = await response.json();
+        const data = await response.json().catch(() => null);
 
         if (response.ok) {
             showFormMessage("aboutMessage", "About Me saved successfully!", "success");
             if (profileData) profileData.about_me = aboutMe;
         } else {
-            showFormMessage("aboutMessage", data.message || "Failed to save", "error");
+            showFormMessage("aboutMessage", (data && data.message) || "Failed to save", "error");
         }
     } catch (error) {
         console.error("Save about error:", error);
         const msg = await extractErrorMessage(error, null);
         showFormMessage("aboutMessage", msg, "error");
+    } finally {
+        if (submitBtn) {
+            setButtonLoading(submitBtn, false);
+        }
     }
 }
 
@@ -358,8 +380,15 @@ async function handleChangePassword(e) {
         return;
     }
 
-try {
-        const response = await fetch(`${PROFILE_API}/password`, {
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    if (submitBtn && submitBtn.disabled) return;
+
+    if (submitBtn) {
+        setButtonLoading(submitBtn, true, "Updating...");
+    }
+
+    try {
+        const response = await fetchWithTimeout(`${PROFILE_API}/password`, {
             method: "PUT",
             headers: Object.assign({ "Content-Type": "application/json" }, getAuthHeaders()),
             body: JSON.stringify({
@@ -369,18 +398,22 @@ try {
             }),
         });
 
-        const data = await response.json();
+        const data = await response.json().catch(() => null);
 
         if (response.ok) {
             showFormMessage("passwordMessage", "Password changed successfully!", "success");
             document.getElementById("passwordForm").reset();
         } else {
-            showFormMessage("passwordMessage", data.message || "Failed to change password", "error");
+            showFormMessage("passwordMessage", (data && data.message) || "Failed to change password", "error");
         }
     } catch (error) {
         console.error("Change password error:", error);
         const msg = await extractErrorMessage(error, null);
         showFormMessage("passwordMessage", msg, "error");
+    } finally {
+        if (submitBtn) {
+            setButtonLoading(submitBtn, false);
+        }
     }
 }
 
@@ -392,6 +425,12 @@ async function handleAvatarUpload(e) {
     const fileInput = e.target;
     const file = fileInput.files[0];
     if (!file) return;
+
+    // Prevent duplicate upload while one is in progress
+    if (fileInput.dataset.uploading === "true") {
+        fileInput.value = "";
+        return;
+    }
 
     // Validate file type
     const allowedTypes = ["image/png", "image/jpg", "image/jpeg", "image/gif", "image/webp"];
@@ -416,38 +455,55 @@ async function handleAvatarUpload(e) {
     };
     reader.readAsDataURL(file);
 
+    // Show uploading state
+    fileInput.dataset.uploading = "true";
+    const avatarClickable = document.getElementById("avatarClickable");
+    if (avatarClickable) {
+        const img = avatarClickable.querySelector("img");
+        if (img) img.style.opacity = "0.5";
+    }
+
 // Upload to server
     const formData = new FormData();
     formData.append("avatar", file);
 
     try {
-        const response = await fetch(`${PROFILE_API}/avatar`, {
+        const response = await fetchWithTimeout(`${PROFILE_API}/avatar`, {
             method: "POST",
             headers: getAuthHeaders(),
             body: formData,
         });
 
-        const data = await response.json();
+        const data = await response.json().catch(() => null);
 
         if (response.ok) {
             showAvatarMessage("Profile picture updated successfully!", "success");
 
             // Update with the server URL for persistence
-            if (data.profile_image) {
+            if (data && data.profile_image) {
                 updateAvatar(data.profile_image);
             }
 
             fileInput.value = "";
         } else {
-            showAvatarMessage(data.message || "Failed to upload image", "error");
+            showAvatarMessage((data && data.message) || "Failed to upload image", "error");
             // Revert to previous on failure
             updateAvatar(profileData ? profileData.profile_image : null);
         }
     } catch (error) {
         console.error("Upload avatar error:", error);
+        if (typeof showToast === "function") {
+            showToast("Unable to connect to the server. Please try again.", "error");
+        }
         showAvatarMessage("Network error. Could not upload image.", "error");
         // Revert to previous on network error
         updateAvatar(profileData ? profileData.profile_image : null);
+    } finally {
+        delete fileInput.dataset.uploading;
+        if (avatarClickable) {
+            const img = avatarClickable.querySelector("img");
+            if (img) img.style.opacity = "";
+        }
     }
 }
 

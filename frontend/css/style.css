@@ -274,6 +274,42 @@ button img{
 
 }
 
+button:disabled{
+
+    opacity:.7;
+
+    cursor:not-allowed;
+
+    transform:none !important;
+
+}
+
+.button-spinner{
+
+    width:18px;
+
+    height:18px;
+
+    border:2px solid rgba(255,255,255,.35);
+
+    border-top-color:#fff;
+
+    border-radius:50%;
+
+    display:inline-block;
+
+    animation:buttonSpinner .7s linear infinite;
+
+    flex-shrink:0;
+
+}
+
+@keyframes buttonSpinner{
+
+    to{ transform:rotate(360deg); }
+
+}
+
 /* RIGHT */
 
 .right{

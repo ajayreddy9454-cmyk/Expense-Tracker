@@ -107,16 +107,6 @@ function showConfirmModal(options = {}) {
     });
 }
 
-/**
- * Escape HTML to prevent XSS
- * @param {string} text
- * @returns {string}
- */
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
+// NOTE: escapeHtml() is defined in js/toast.js (loaded on every page before modal.js)
 
 

@@ -11,19 +11,30 @@ document.addEventListener("DOMContentLoaded", () => {
     loadCategoryDropdown();
 
     // Add Budget button
-    document.querySelector(".add-budget-btn").addEventListener("click", () => {
-        openBudgetModal(null);
-    });
+    const addBudgetBtn = document.querySelector(".add-budget-btn");
+    if (addBudgetBtn) {
+        addBudgetBtn.addEventListener("click", () => {
+            openBudgetModal(null);
+        });
+    }
 
     // Modal close
-    document.getElementById("budget-modal-close-btn").addEventListener("click", closeBudgetModal);
-    document.getElementById("budget-modal-cancel-btn").addEventListener("click", closeBudgetModal);
-    document.getElementById("budget-modal-overlay").addEventListener("click", (e) => {
-        if (e.target === e.currentTarget) closeBudgetModal();
-    });
+    const modalCloseBtn = document.getElementById("budget-modal-close-btn");
+    if (modalCloseBtn) modalCloseBtn.addEventListener("click", closeBudgetModal);
+
+    const modalCancelBtn = document.getElementById("budget-modal-cancel-btn");
+    if (modalCancelBtn) modalCancelBtn.addEventListener("click", closeBudgetModal);
+
+    const modalOverlay = document.getElementById("budget-modal-overlay");
+    if (modalOverlay) {
+        modalOverlay.addEventListener("click", (e) => {
+            if (e.target === e.currentTarget) closeBudgetModal();
+        });
+    }
 
     // Save button
-    document.getElementById("budget-modal-save-btn").addEventListener("click", saveBudget);
+    const saveBtn = document.getElementById("budget-modal-save-btn");
+    if (saveBtn) saveBtn.addEventListener("click", saveBudget);
 
 });
 
@@ -42,7 +53,7 @@ async function loadBudgets() {
 
     try {
 
-        const response = await fetch(`${API_BASE_URL}/api/budgets/`, {
+        const response = await fetchWithTimeout(`${API_BASE_URL}/api/budgets/`, {
             headers: getAuthHeaders()
         });
 
@@ -55,6 +66,10 @@ async function loadBudgets() {
     } catch (error) {
 
         console.error("Failed to load budgets:", error);
+        const msg = await extractErrorMessage(error, null);
+        if (typeof showToast === "function") {
+            showToast(msg, "error");
+        }
 
     }
 
@@ -68,7 +83,7 @@ async function loadCategoryDropdown() {
 
     try {
 
-        const response = await fetch(`${API_BASE_URL}/api/categories/`, {
+        const response = await fetchWithTimeout(`${API_BASE_URL}/api/categories/`, {
             headers: getAuthHeaders()
         });
 
@@ -77,6 +92,7 @@ async function loadCategoryDropdown() {
         allCategories = await response.json();
 
         const select = document.getElementById("budget-modal-category");
+        if (!select) return;
 
         select.innerHTML = '<option value="">-- Select Category --</option>';
 
@@ -174,7 +190,7 @@ function renderBudgetCards(budgets) {
 
             <div class="budget-top">
 
-                <h3>${icon} ${name}</h3>
+                <h3>${escapeHtml(icon)} ${escapeHtml(name)}</h3>
 
                 <span>₹${budgetAmount.toLocaleString()}</span>
 
@@ -246,25 +262,27 @@ function openBudgetModal(budget) {
     const monthSelect = document.getElementById("budget-modal-month");
     const yearInput = document.getElementById("budget-modal-year");
 
+    if (!overlay) return;
+
     if (budget) {
 
         // Edit mode
         editingBudgetId = budget.id;
-        title.textContent = "Edit Budget";
-        categorySelect.value = budget.category_id || "";
-        amountInput.value = budget.budget_amount || "";
-        monthSelect.value = budget.month || "";
-        yearInput.value = budget.year || "";
+        if (title) title.textContent = "Edit Budget";
+        if (categorySelect) categorySelect.value = budget.category_id || "";
+        if (amountInput) amountInput.value = budget.budget_amount || "";
+        if (monthSelect) monthSelect.value = budget.month || "";
+        if (yearInput) yearInput.value = budget.year || "";
 
     } else {
 
         // Add mode
         editingBudgetId = null;
-        title.textContent = "Add Budget";
-        categorySelect.value = "";
-        amountInput.value = "";
-        monthSelect.value = "";
-        yearInput.value = "";
+        if (title) title.textContent = "Add Budget";
+        if (categorySelect) categorySelect.value = "";
+        if (amountInput) amountInput.value = "";
+        if (monthSelect) monthSelect.value = "";
+        if (yearInput) yearInput.value = "";
 
     }
 
@@ -275,6 +293,7 @@ function openBudgetModal(budget) {
 function closeBudgetModal() {
 
     const overlay = document.getElementById("budget-modal-overlay");
+    if (!overlay) return;
     overlay.classList.remove("active");
     editingBudgetId = null;
 
@@ -286,15 +305,19 @@ function closeBudgetModal() {
 
 async function saveBudget() {
 
+    const saveBtn = document.getElementById("budget-modal-save-btn");
     const categorySelect = document.getElementById("budget-modal-category");
     const amountInput = document.getElementById("budget-modal-amount");
     const monthSelect = document.getElementById("budget-modal-month");
     const yearInput = document.getElementById("budget-modal-year");
 
+    if (saveBtn && saveBtn.disabled) return;
+    if (!categorySelect || !amountInput) return;
+
     const category_id = parseInt(categorySelect.value);
     const amount = parseFloat(amountInput.value);
-    const month = monthSelect.value;
-    const year = parseInt(yearInput.value);
+    const month = monthSelect ? monthSelect.value : "";
+    const year = yearInput ? parseInt(yearInput.value) : undefined;
 
     if (!category_id) {
         if (typeof showToast === "function") {
@@ -316,12 +339,16 @@ async function saveBudget() {
         return;
     }
 
+    if (saveBtn) {
+        setButtonLoading(saveBtn, true, "Saving...");
+    }
+
     try {
 
         if (editingBudgetId) {
 
             // UPDATE
-            const response = await fetch(`${API_BASE_URL}/api/budgets/${editingBudgetId}`, {
+            const response = await fetchWithTimeout(`${API_BASE_URL}/api/budgets/${editingBudgetId}`, {
                 method: "PUT",
                 headers: Object.assign({ "Content-Type": "application/json" }, getAuthHeaders()),
                 body: JSON.stringify({ category_id, amount, month, year }),
@@ -342,7 +369,7 @@ async function saveBudget() {
         } else {
 
             // CREATE
-            const response = await fetch(`${API_BASE_URL}/api/budgets/`, {
+            const response = await fetchWithTimeout(`${API_BASE_URL}/api/budgets/`, {
                 method: "POST",
                 headers: Object.assign({ "Content-Type": "application/json" }, getAuthHeaders()),
                 body: JSON.stringify({ category_id, amount, month, year }),
@@ -375,6 +402,10 @@ async function saveBudget() {
         }
         console.error(error);
 
+    } finally {
+        if (saveBtn) {
+            setButtonLoading(saveBtn, false);
+        }
     }
 
 }
@@ -404,7 +435,7 @@ async function confirmDeleteBudget(id) {
 
     try {
 
-const response = await fetch(`${API_BASE_URL}/api/budgets/${id}`, {
+        const response = await fetchWithTimeout(`${API_BASE_URL}/api/budgets/${id}`, {
             method: "DELETE",
             headers: getAuthHeaders()
         });

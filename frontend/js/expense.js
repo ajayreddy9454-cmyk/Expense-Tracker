@@ -5,6 +5,7 @@
 
 let expenses = [];
 let editingExpenseId = null;
+let categoryMap = {};
 
 const EXPENSES_API_URL = `${API_BASE_URL}/api/expenses/`;
 
@@ -18,15 +19,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         initializeExpenseForm();
     }
 
-    await refreshExpenses();
-
     // If on expenses.html page, load categories for filter and setup filtering
     if (document.querySelector(".expense-filters")) {
         await loadCategoryFilter();
         setupFilters();
     }
-
-    loadExpenses();
 
     // Edit flow: add_expense.html?editId=<id>
     const url = new URL(window.location.href);
@@ -37,6 +34,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         window.history.replaceState({}, "", url.toString());
 
         await tryBeginEditFromId(idNum);
+    } else if (document.querySelector(".expense-table")) {
+        // Only fetch the expense list when a table exists on this page.
+        // On add_expense.html (no table) this avoids a redundant network call.
+        await refreshExpenses();
+        loadExpenses();
     }
 });
 
@@ -45,17 +47,29 @@ document.addEventListener("DOMContentLoaded", async () => {
 // ======================================
 
 async function refreshExpenses() {
+    try {
+        const res = await fetchWithTimeout(EXPENSES_API_URL, {
+            method: "GET",
+            headers: getAuthHeaders()
+        });
 
-    const res = await fetch(EXPENSES_API_URL, {
-        method: "GET",
-        headers: getAuthHeaders()
-    });
+        if (!res.ok) {
+            const msg = await extractErrorMessage(new Error("Failed to load expenses"), res);
+            throw new Error(msg);
+        }
 
-    if (!res.ok) {
-        throw new Error("Failed to load expenses");
+        expenses = await res.json();
+    } catch (error) {
+        console.error("refreshExpenses failed:", error);
+        // Keep existing expenses on failure rather than wiping the table
+        if (!Array.isArray(expenses)) {
+            expenses = [];
+        }
+        const msg = await extractErrorMessage(error, null);
+        if (typeof showToast === "function") {
+            showToast(msg, "error");
+        }
     }
-
-    expenses = await res.json();
 }
 
 // ======================================
@@ -63,11 +77,11 @@ async function refreshExpenses() {
 // ======================================
 
 async function loadCategoriesDropdown() {
-    const select = document.querySelector("select");
+    const select = document.querySelector(".expense-grid select");
     if (!select) return;
 
-try {
-        const res = await fetch(`${API_BASE_URL}/api/categories/`, {
+    try {
+        const res = await fetchWithTimeout(`${API_BASE_URL}/api/categories/`, {
             headers: getAuthHeaders()
         });
         if (!res.ok) throw new Error("Failed to load categories");
@@ -106,15 +120,20 @@ function initializeExpenseForm() {
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-try {
-            const titleInput = form.querySelector('input[type="text"]');
-            const amountInput = form.querySelector('input[type="number"]');
-            const allSelects = form.querySelectorAll("select");
-            const categorySelect = allSelects[0];
-            const paymentMethodSelect = allSelects[1];
-            const dateInput = form.querySelector('input[type="date"]');
-            const textarea = form.querySelector("textarea");
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn && submitBtn.disabled) return;
 
+        // Cache DOM lookups for the duration of this submit
+        const titleInput = form.querySelector('input[type="text"]');
+        const amountInput = form.querySelector('input[type="number"]');
+        const allSelects = form.querySelectorAll("select");
+        const categorySelect = allSelects[0];
+        const paymentMethodSelect = allSelects[1];
+        const dateInput = form.querySelector('input[type="date"]');
+        const textarea = form.querySelector("textarea");
+        const receiptInput = form.querySelector('input[type="file"]');
+
+        try {
             const title = titleInput ? titleInput.value.trim() : "";
             const amountStr = amountInput ? amountInput.value : "";
             const category = categorySelect ? categorySelect.value : "";
@@ -122,7 +141,7 @@ try {
             const date = dateInput ? dateInput.value : "";
             const notes = textarea ? textarea.value : "";
 
-if (title === "" || amountStr === "" || date === "") {
+            if (title === "" || amountStr === "" || date === "") {
                 if (typeof showToast === "function") {
                     showToast("Please fill all required fields.", "warning");
                 } else {
@@ -131,7 +150,7 @@ if (title === "" || amountStr === "" || date === "") {
                 return;
             }
 
-const payload = {
+            const payload = {
                 category_id: Number(category),
                 title,
                 amount: Number(amountStr),
@@ -140,43 +159,47 @@ const payload = {
                 notes
             };
 
-const isEditing = editingExpenseId !== null;
+            const isEditing = editingExpenseId !== null;
             const endpoint = isEditing ? `${EXPENSES_API_URL}${editingExpenseId}` : EXPENSES_API_URL;
             const method = isEditing ? "PUT" : "POST";
 
-            const receiptInput = form.querySelector('input[type="file"]');
-            const file =
-                receiptInput && receiptInput.files && receiptInput.files.length > 0
-                    ? receiptInput.files[0]
-                    : null;
+        const file =
+            receiptInput && receiptInput.files && receiptInput.files.length > 0
+                ? receiptInput.files[0]
+                : null;
 
-let res;
-if (file) {
-    // Send FormData (for file uploads) — browser auto-sets Content-Type
-    const formData = new FormData();
-    formData.append("category_id", payload.category_id);
-    formData.append("title", payload.title);
-    formData.append("amount", payload.amount);
-    formData.append("payment_method", payload.payment_method);
-    formData.append("expense_date", payload.expense_date);
-    formData.append("notes", payload.notes);
-    if (file) formData.append("receipt", file);
+            // Show loading state on submit button
+            if (submitBtn) {
+                setButtonLoading(submitBtn, true, isEditing ? "Updating..." : "Saving...");
+            }
 
-    res = await fetch(endpoint, {
-        method,
-        headers: getAuthHeaders(),  // No Content-Type — browser sets multipart boundary
-        body: formData
-    });
-} else {
-    // Send JSON (no file) — simpler, avoids CORS/form-data issues on Render
-    res = await fetch(endpoint, {
-        method,
-        headers: getAuthHeaders("application/json"),
-        body: JSON.stringify(payload)
-    });
-}
+            let res;
+            if (file) {
+                // Send FormData (for file uploads) — browser auto-sets Content-Type
+                const formData = new FormData();
+                formData.append("category_id", payload.category_id);
+                formData.append("title", payload.title);
+                formData.append("amount", payload.amount);
+                formData.append("payment_method", payload.payment_method);
+                formData.append("expense_date", payload.expense_date);
+                formData.append("notes", payload.notes);
+                formData.append("receipt", file);
 
-if (!res.ok) {
+                res = await fetchWithTimeout(endpoint, {
+                    method,
+                    headers: getAuthHeaders(),  // No Content-Type — browser sets multipart boundary
+                    body: formData
+                });
+            } else {
+                // Send JSON (no file) — simpler, avoids CORS/form-data issues on Render
+                res = await fetchWithTimeout(endpoint, {
+                    method,
+                    headers: getAuthHeaders("application/json"),
+                    body: JSON.stringify(payload)
+                });
+            }
+
+            if (!res.ok) {
                 const msg = await extractErrorMessage(new Error("Save failed"), res);
                 if (typeof showToast === "function") {
                     showToast(msg, "error");
@@ -184,9 +207,7 @@ if (!res.ok) {
                 return;
             }
 
-
-
-if (typeof showToast === "function") {
+            if (typeof showToast === "function") {
                 showToast(isEditing ? "Expense updated successfully!" : "Expense added successfully!", "success");
             } else {
                 alert(isEditing ? "Expense updated successfully!" : "Expense added successfully!");
@@ -197,19 +218,26 @@ if (typeof showToast === "function") {
             editingExpenseId = null;
             updateSubmitLabel();
 
-            try {
+            // Refresh the expense list only when a table exists on this page.
+            // On add_expense.html (no table) this avoids a redundant network call
+            // immediately after every save.
+            if (document.querySelector(".expense-table")) {
                 await refreshExpenses();
-            } catch (err) {
-                console.error("refreshExpenses failed:", err);
+                loadExpenses();
             }
-            loadExpenses();
-} catch (error) {
+        } catch (error) {
             console.error(error);
-            const msg = typeof error.message === "string" && error.message ? error.message : "Unable to connect to the server. Please check your connection.";
+            const msg = await extractErrorMessage(error, null);
             if (typeof showToast === "function") {
                 showToast(msg, "error");
             } else {
                 alert(msg);
+            }
+        } finally {
+            // Restore button (also covers the early "required fields" return path).
+            // setButtonLoading(false) restores the original label automatically.
+            if (submitBtn) {
+                setButtonLoading(submitBtn, false);
             }
         }
     });
@@ -244,20 +272,20 @@ function loadExpenses() {
         return;
     }
 
-    expenses.forEach(expense => {
+    const rows = expenses.map(expense => {
         const categoryName = expense.category_name || categoryMap[expense.category_id] || "Uncategorized";
-        tableBody.innerHTML += `
+        return `
             <tr>
-                <td>${expense.title}</td>
-                <td>${categoryName}</td>
-                <td>${expense.expense_date}</td>
-                <td>Rs.${expense.amount}</td>
+                <td>${escapeHtml(expense.title || "")}</td>
+                <td>${escapeHtml(categoryName)}</td>
+                <td>${escapeHtml(expense.expense_date || "")}</td>
+                <td>Rs.${Number(expense.amount || 0).toLocaleString()}</td>
                 <td>
                     <span class="completed">Completed</span>
                 </td>
                 <td>
                     <div class="expense-actions" style="display:flex; gap:8px; align-items:center;">
-                        ${expense.receipt ? `<a href="${API_BASE_URL}/static/uploads/${expense.receipt}" target="_blank" rel="noopener">View Receipt</a>` : 'No Receipt'}
+                        ${expense.receipt ? `<a href="${API_BASE_URL}/static/uploads/${escapeHtml(expense.receipt)}" target="_blank" rel="noopener">View Receipt</a>` : 'No Receipt'}
                         <button class="edit-btn" onclick="editExpense(${expense.id})">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </button>
@@ -269,6 +297,8 @@ function loadExpenses() {
             </tr>
         `;
     });
+
+    tableBody.innerHTML = rows.join("");
 }
 
 // ======================================
@@ -279,10 +309,9 @@ async function tryBeginEditFromId(id) {
     // Ensure we have the expense list.
     if (!expenses || !expenses.length) {
         await refreshExpenses();
-        loadExpenses();
     }
 
-const expense = expenses.find(e => e.id === id);
+    const expense = expenses.find(e => e.id === id);
     if (!expense) {
         if (typeof showToast === "function") {
             showToast("Expense not found", "error");
@@ -356,31 +385,31 @@ async function deleteExpense(id) {
 
     if (!confirmed) return;
 
-fetch(`${EXPENSES_API_URL}${id}`, {
-        method: "DELETE",
-        headers: getAuthHeaders()
-    })
-        .then(async (res) => {
-            if (!res.ok) {
-                const errText = await res.text().catch(() => "");
-                throw new Error(errText || "Failed to delete expense");
-            }
-            return res.json();
-        })
-        .then(async () => {
-            if (typeof showToast === "function") {
-                showToast("Expense deleted successfully!", "success");
-            }
-            await refreshExpenses();
-            loadExpenses();
-        })
-        .catch((err) => {
-            if (typeof showToast === "function") {
-                showToast(err.message || "Failed to delete expense", "error");
-            } else {
-                alert(err.message || "Failed to delete expense");
-            }
+    try {
+        const res = await fetchWithTimeout(`${EXPENSES_API_URL}${id}`, {
+            method: "DELETE",
+            headers: getAuthHeaders()
         });
+
+        if (!res.ok) {
+            const errText = await extractErrorMessage(new Error("Failed to delete expense"), res);
+            throw new Error(errText);
+        }
+
+        if (typeof showToast === "function") {
+            showToast("Expense deleted successfully!", "success");
+        }
+        await refreshExpenses();
+        loadExpenses();
+    } catch (err) {
+        console.error("Delete expense error:", err);
+        const msg = await extractErrorMessage(err, null);
+        if (typeof showToast === "function") {
+            showToast(msg, "error");
+        } else {
+            alert(msg);
+        }
+    }
 }
 
 window.deleteExpense = deleteExpense;
@@ -389,14 +418,12 @@ window.deleteExpense = deleteExpense;
 // Category Filter — Load from API
 // ======================================
 
-let categoryMap = {};
-
 async function loadCategoryFilter() {
     const select = document.getElementById("expense-category");
     if (!select) return;
 
-try {
-        const res = await fetch(`${API_BASE_URL}/api/categories/`, {
+    try {
+        const res = await fetchWithTimeout(`${API_BASE_URL}/api/categories/`, {
             headers: getAuthHeaders()
         });
         if (!res.ok) throw new Error("Failed to load categories");
@@ -490,20 +517,20 @@ function renderFilteredExpenses(filteredExpenses) {
         return;
     }
 
-    filteredExpenses.forEach(expense => {
+    const rows = filteredExpenses.map(expense => {
         const categoryName = expense.category_name || categoryMap[expense.category_id] || "Uncategorized";
-        tableBody.innerHTML += `
+        return `
             <tr>
-                <td>${expense.title}</td>
-                <td>${categoryName}</td>
-                <td>${expense.expense_date}</td>
-                <td>Rs.${expense.amount}</td>
+                <td>${escapeHtml(expense.title || "")}</td>
+                <td>${escapeHtml(categoryName)}</td>
+                <td>${escapeHtml(expense.expense_date || "")}</td>
+                <td>Rs.${Number(expense.amount || 0).toLocaleString()}</td>
                 <td>
                     <span class="completed">Completed</span>
                 </td>
                 <td>
                     <div class="expense-actions" style="display:flex; gap:8px; align-items:center;">
-                        ${expense.receipt ? `<a href="${API_BASE_URL}/static/uploads/${expense.receipt}" target="_blank" rel="noopener">View Receipt</a>` : 'No Receipt'}
+                        ${expense.receipt ? `<a href="${API_BASE_URL}/static/uploads/${escapeHtml(expense.receipt)}" target="_blank" rel="noopener">View Receipt</a>` : 'No Receipt'}
                         <button class="edit-btn" onclick="editExpense(${expense.id})">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </button>
@@ -515,5 +542,7 @@ function renderFilteredExpenses(filteredExpenses) {
             </tr>
         `;
     });
+
+    tableBody.innerHTML = rows.join("");
 }
 

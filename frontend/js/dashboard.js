@@ -8,8 +8,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // Auth guard first
     if (!authGuard()) return;
 
-    loadDashboard();
     setWelcomeUserName();
+    loadDashboard();
 
 });
 
@@ -32,24 +32,17 @@ function setWelcomeUserName() {
 
     // Extract first name only
     let firstName = "User";
-    try {
-        const stored = localStorage.getItem("currentUser");
-        if (stored) {
-            const user = JSON.parse(stored);
-            const fullName = user.full_name || user.name || "";
-            if (fullName) {
-                firstName = fullName.trim().split(/\s+/)[0];
-            }
+    const user = getCurrentUser();
+    if (user) {
+        const fullName = user.full_name || user.name || "";
+        if (fullName) {
+            firstName = fullName.trim().split(/\s+/)[0];
         }
-    } catch (e) {
-        // ignore
     }
 
     // Update the h1 text: "Good Morning, Vijay 👋"
-    // The h1 contains "Good Evening," before the span
     const h1 = el.closest("h1");
     if (h1) {
-        // Replace the text before the span
         const textNode = h1.childNodes[0];
         if (textNode) {
             textNode.textContent = greeting + ", ";
@@ -63,7 +56,6 @@ function setWelcomeUserName() {
 // ======================================
 
 async function loadDashboard() {
-
     const apiData = await fetchDashboardSummary();
 
     if (!apiData) return;
@@ -74,7 +66,6 @@ async function loadDashboard() {
     updateCategoriesUsedCard(apiData.categories_used);
     loadTopCategories(apiData.top_categories);
     loadRecentTransactions(apiData.recent_expenses);
-
 }
 
 // ======================================
@@ -82,10 +73,8 @@ async function loadDashboard() {
 // ======================================
 
 async function fetchDashboardSummary() {
-
     try {
-
-        const response = await fetch(`${API_BASE_URL}/api/dashboard/`, {
+        const response = await fetchWithTimeout(`${API_BASE_URL}/api/dashboard/`, {
             headers: getAuthHeaders()
         });
 
@@ -98,18 +87,16 @@ async function fetchDashboardSummary() {
         }
 
         return await response.json();
-
     } catch (error) {
-
         console.error(error);
+        const msg = await extractErrorMessage(error, null);
         if (typeof showToast === "function") {
-            const msg = await extractErrorMessage(error, null);
             showToast(msg, "error");
         }
         return null;
-
+    } finally {
+        // No loading indicator to clear here; cards fall back to placeholder text
     }
-
 }
 
 // ======================================
@@ -117,15 +104,10 @@ async function fetchDashboardSummary() {
 // ======================================
 
 function updateTotalExpensesCard(count) {
-
     const el = document.getElementById("total-expenses-value");
-
     if (el) {
-
-        el.textContent = Number(count).toLocaleString();
-
+        el.textContent = Number(count || 0).toLocaleString();
     }
-
 }
 
 // ======================================
@@ -133,15 +115,10 @@ function updateTotalExpensesCard(count) {
 // ======================================
 
 function updateTotalAmountSpentCard(amount) {
-
     const el = document.getElementById("total-amount-spent-value");
-
     if (el) {
-
-        el.textContent = `₹${Number(amount).toLocaleString()}`;
-
+        el.textContent = `₹${Number(amount || 0).toLocaleString()}`;
     }
-
 }
 
 // ======================================
@@ -149,15 +126,10 @@ function updateTotalAmountSpentCard(amount) {
 // ======================================
 
 function updateThisMonthExpensesCard(amount) {
-
     const el = document.getElementById("this-month-expenses-value");
-
     if (el) {
-
-        el.textContent = `₹${Number(amount).toLocaleString()}`;
-
+        el.textContent = `₹${Number(amount || 0).toLocaleString()}`;
     }
-
 }
 
 // ======================================
@@ -165,15 +137,10 @@ function updateThisMonthExpensesCard(amount) {
 // ======================================
 
 function updateCategoriesUsedCard(count) {
-
     const el = document.getElementById("categories-used-value");
-
     if (el) {
-
-        el.textContent = Number(count).toLocaleString();
-
+        el.textContent = Number(count || 0).toLocaleString();
     }
-
 }
 
 // ======================================
@@ -181,39 +148,29 @@ function updateCategoriesUsedCard(count) {
 // ======================================
 
 function loadTopCategories(topCategories) {
-
     const container = document.getElementById("top-categories-list");
-
     if (!container) return;
-
-    container.innerHTML = "";
 
     const categories = Array.isArray(topCategories) ? topCategories : [];
 
     if (categories.length === 0) {
-
         container.innerHTML = `<div class="category-item"><span>No category data.</span></div>`;
-
         return;
-
     }
 
-    categories.forEach(cat => {
-
+    const items = categories.map(cat => {
         const icon = cat.category_icon || "📦";
         const name = cat.category_name ?? "Unknown";
         const amount = cat.total_amount ?? 0;
-
-        const item = document.createElement("div");
-        item.className = "category-item";
-        item.innerHTML = `
-            <span>${icon} ${name}</span>
-            <strong>₹${Number(amount).toLocaleString()}</strong>
+        return `
+            <div class="category-item">
+                <span>${escapeHtml(icon)} ${escapeHtml(name)}</span>
+                <strong>₹${Number(amount).toLocaleString()}</strong>
+            </div>
         `;
-        container.appendChild(item);
-
     });
 
+    container.innerHTML = items.join("");
 }
 
 // ======================================
@@ -221,67 +178,39 @@ function loadTopCategories(topCategories) {
 // ======================================
 
 function loadRecentTransactions(recentExpenses) {
-
     const tableBody = document.querySelector(".transactions tbody");
-
     if (!tableBody) return;
-
-    tableBody.innerHTML = "";
 
     const rows = Array.isArray(recentExpenses) ? recentExpenses : [];
 
     if (rows.length === 0) {
-
         tableBody.innerHTML = `
-
             <tr>
-
                 <td colspan="5" style="text-align:center;">
-
                     No recent expenses.
-
                 </td>
-
             </tr>
-
         `;
-
         return;
-
     }
 
-    rows.forEach(expense => {
-
+    const html = rows.map(expense => {
         const title = expense.title ?? "";
-
         const icon = expense.category_icon || "📦";
-
         const name = expense.category_name ?? "Unknown";
-
         const date = expense.expense_date ?? "";
-
         const amount = expense.amount ?? 0;
-
-        tableBody.innerHTML += `
-
+        return `
             <tr>
-
-                <td>${title}</td>
-
-                <td>${icon} ${name}</td>
-
-                <td>${date}</td>
-
+                <td>${escapeHtml(title)}</td>
+                <td>${escapeHtml(icon)} ${escapeHtml(name)}</td>
+                <td>${escapeHtml(date)}</td>
                 <td>₹${Number(amount).toLocaleString()}</td>
-
                 <td><span class="completed">Completed</span></td>
-
             </tr>
-
         `;
-
     });
 
+    tableBody.innerHTML = html.join("");
 }
-
 

@@ -43,13 +43,17 @@ async function loadSettings() {
     }
 
     try {
-        const response = await fetch(`${SETTINGS_API}/`, {
+        const response = await fetchWithTimeout(`${SETTINGS_API}/`, {
             headers: getAuthHeaders()
         });
-        const data = await response.json();
+        const data = await response.json().catch(() => null);
 
         if (!response.ok) {
-            showMessageOnPage(data.message || "Failed to load settings");
+            const msg = (data && data.message) || "Failed to load settings";
+            showMessageOnPage(msg);
+            if (typeof showToast === "function") {
+                showToast(msg, "error");
+            }
             return;
         }
 
@@ -57,6 +61,9 @@ async function loadSettings() {
         populateSettings(data);
     } catch (error) {
         console.error("Settings load error:", error);
+        if (typeof showToast === "function") {
+            showToast("Unable to connect to the server. Please try again.", "error");
+        }
     }
 }
 
@@ -110,21 +117,27 @@ function setupEventListeners() {
 // ======================================
 
 async function handleSaveSettings() {
+    const saveBtn = document.getElementById("saveSettingsBtn");
+    if (saveBtn && saveBtn.disabled) return;
+
     // Gather all current values
     const selectedTheme = document.querySelector('input[name="theme"]:checked');
     const theme = selectedTheme ? selectedTheme.value : "light";
 
-    const notifications = document.getElementById("notificationsToggle")
-        ? document.getElementById("notificationsToggle").checked
-        : true;
+    const notificationsEl = document.getElementById("notificationsToggle");
+    const notifications = notificationsEl ? notificationsEl.checked : true;
 
     const payload = {
         theme: theme,
         notifications: notifications,
     };
 
+    if (saveBtn) {
+        setButtonLoading(saveBtn, true, "Saving...");
+    }
+
     try {
-        const response = await fetch(`${SETTINGS_API}/`, {
+        const response = await fetchWithTimeout(`${SETTINGS_API}/`, {
             method: "PUT",
             headers: Object.assign(
                 { "Content-Type": "application/json" },
@@ -133,7 +146,7 @@ async function handleSaveSettings() {
             body: JSON.stringify(payload),
         });
 
-        const data = await response.json();
+        const data = await response.json().catch(() => null);
 
         if (response.ok) {
             // Apply theme server-side confirmed
@@ -141,7 +154,7 @@ async function handleSaveSettings() {
             showSuccess("Settings saved successfully!");
 
             if (currentSettings) {
-                currentSettings = data.settings || data;
+                currentSettings = (data && data.settings) || data || currentSettings;
             }
         } else {
             const msg =
@@ -152,7 +165,13 @@ async function handleSaveSettings() {
         }
     } catch (error) {
         console.error("Save settings error:", error);
-        showError("Unable to connect to the server. Please check your connection.");
+        const msg = await extractErrorMessage(error, null);
+        showError(msg);
+    } finally {
+        // Always re-enable the button
+        if (saveBtn) {
+            setButtonLoading(saveBtn, false);
+        }
     }
 }
 

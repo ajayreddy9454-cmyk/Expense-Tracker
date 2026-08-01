@@ -1253,6 +1253,51 @@ button{
 
 }
 
+/* ----- Button Loading State (shared setButtonLoading helper) ----- */
+button:disabled{
+
+    opacity:.7;
+
+    cursor:not-allowed;
+
+    transform:none !important;
+
+}
+
+.button-spinner{
+
+    width:18px;
+
+    height:18px;
+
+    border:2px solid rgba(255,255,255,.35);
+
+    border-top-color:#fff;
+
+    border-radius:50%;
+
+    display:inline-block;
+
+    animation:buttonSpinner .7s linear infinite;
+
+    flex-shrink:0;
+
+    vertical-align:middle;
+
+}
+
+button.is-loading{
+
+    pointer-events:none;
+
+}
+
+@keyframes buttonSpinner{
+
+    to{ transform:rotate(360deg); }
+
+}
+
 /* =========================================================
    DARK MODE — Global Overrides for ALL Page Components
    =========================================================

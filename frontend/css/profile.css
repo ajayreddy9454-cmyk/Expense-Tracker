@@ -499,14 +499,6 @@ body.dark-mode .stat-info p {
     color: #9CA3AF;
 }
 
-body.dark-mode .upload-btn-label {
-    background: var(--primary, #6366F1);
-}
-
-body.dark-mode .avatar-hint {
-    color: #9CA3AF;
-}
-
 body.dark-mode .form-message.success {
     background: rgba(22, 163, 74, 0.15);
     color: #4ADE80;
@@ -571,8 +563,7 @@ body.dark-mode .form-message.error {
     }
 
     .btn-primary,
-    .btn-secondary,
-    .upload-btn-label {
+    .btn-secondary {
         width: 100%;
         justify-content: center;
     }
@@ -588,16 +579,6 @@ body.dark-mode .form-message.error {
 
     .stat-info h4 {
         font-size: 22px;
-    }
-
-    .avatar-upload-wrapper {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
-
-    .avatar-upload-actions {
-        align-items: center;
     }
 
     .profile-header-card {

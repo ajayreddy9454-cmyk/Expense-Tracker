@@ -11,22 +11,34 @@ document.addEventListener("DOMContentLoaded", () => {
     loadCategories();
 
     // Add Category button
-    document.getElementById("add-category-btn").addEventListener("click", () => {
-        openModal(null);
-    });
+    const addBtn = document.getElementById("add-category-btn");
+    if (addBtn) {
+        addBtn.addEventListener("click", () => {
+            openModal(null);
+        });
+    }
 
     // Modal close
-    document.getElementById("modal-close-btn").addEventListener("click", closeModal);
-    document.getElementById("modal-cancel-btn").addEventListener("click", closeModal);
-    document.getElementById("category-modal-overlay").addEventListener("click", (e) => {
-        if (e.target === e.currentTarget) closeModal();
-    });
+    const modalCloseBtn = document.getElementById("modal-close-btn");
+    if (modalCloseBtn) modalCloseBtn.addEventListener("click", closeModal);
+
+    const modalCancelBtn = document.getElementById("modal-cancel-btn");
+    if (modalCancelBtn) modalCancelBtn.addEventListener("click", closeModal);
+
+    const modalOverlay = document.getElementById("category-modal-overlay");
+    if (modalOverlay) {
+        modalOverlay.addEventListener("click", (e) => {
+            if (e.target === e.currentTarget) closeModal();
+        });
+    }
 
     // Save button
-    document.getElementById("modal-save-btn").addEventListener("click", saveCategory);
+    const saveBtn = document.getElementById("modal-save-btn");
+    if (saveBtn) saveBtn.addEventListener("click", saveCategory);
 
     // Search
-    document.getElementById("category-search").addEventListener("input", filterCategories);
+    const searchInput = document.getElementById("category-search");
+    if (searchInput) searchInput.addEventListener("input", filterCategories);
 
 });
 
@@ -45,7 +57,7 @@ async function loadCategories() {
 
     try {
 
-        const response = await fetch(`${API_BASE_URL}/api/categories/`, {
+        const response = await fetchWithTimeout(`${API_BASE_URL}/api/categories/`, {
             headers: getAuthHeaders()
         });
 
@@ -211,13 +223,17 @@ function closeModal() {
 
 async function saveCategory() {
 
+    const saveBtn = document.getElementById("modal-save-btn");
     const nameInput = document.getElementById("modal-category-name");
     const iconInput = document.getElementById("modal-category-icon");
 
-    const name = nameInput.value.trim();
-    const icon = iconInput.value.trim();
+    if (!nameInput) return;
+    if (saveBtn && saveBtn.disabled) return; // Prevent duplicate requests
 
-if (!name) {
+    const name = nameInput.value.trim();
+    const icon = iconInput ? iconInput.value.trim() : "";
+
+    if (!name) {
 
         if (typeof showToast === "function") {
             showToast("Category name is required.", "warning");
@@ -229,12 +245,16 @@ if (!name) {
 
     }
 
+    if (saveBtn) {
+        setButtonLoading(saveBtn, true, "Saving...");
+    }
+
     try {
 
         if (editingCategoryId) {
 
             // UPDATE
-            const response = await fetch(`${API_BASE_URL}/api/categories/${editingCategoryId}`, {
+            const response = await fetchWithTimeout(`${API_BASE_URL}/api/categories/${editingCategoryId}`, {
                 method: "PUT",
                 headers: Object.assign({ "Content-Type": "application/json" }, getAuthHeaders()),
                 body: JSON.stringify({ name, icon }),
@@ -255,7 +275,7 @@ if (!name) {
         } else {
 
             // CREATE
-            const response = await fetch(`${API_BASE_URL}/api/categories/`, {
+            const response = await fetchWithTimeout(`${API_BASE_URL}/api/categories/`, {
                 method: "POST",
                 headers: Object.assign({ "Content-Type": "application/json" }, getAuthHeaders()),
                 body: JSON.stringify({ name, icon }),
@@ -288,6 +308,10 @@ if (!name) {
         }
         console.error(error);
 
+    } finally {
+        if (saveBtn) {
+            setButtonLoading(saveBtn, false);
+        }
     }
 
 }
@@ -317,7 +341,7 @@ async function confirmDelete(id) {
 
     try {
 
-const response = await fetch(`${API_BASE_URL}/api/categories/${id}`, {
+const response = await fetchWithTimeout(`${API_BASE_URL}/api/categories/${id}`, {
             method: "DELETE",
             headers: getAuthHeaders()
         });
