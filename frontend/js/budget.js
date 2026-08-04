@@ -7,8 +7,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!authGuard()) return;
 
-    loadBudgets();
-    loadCategoryDropdown();
+    // Load budgets and categories in parallel (Promise.all) instead of
+    // sequentially — removes a full network round-trip from startup.
+    Promise.all([loadBudgets(), loadCategoryDropdown()]);
 
     // Add Budget button
     const addBudgetBtn = document.querySelector(".add-budget-btn");
@@ -36,6 +37,28 @@ document.addEventListener("DOMContentLoaded", () => {
     const saveBtn = document.getElementById("budget-modal-save-btn");
     if (saveBtn) saveBtn.addEventListener("click", saveBudget);
 
+    // Event delegation for edit/delete buttons — single listener on the grid.
+    const grid = document.getElementById("budgetGrid");
+    if (grid) {
+        grid.addEventListener("click", (e) => {
+            const editBtn = e.target.closest(".budget-edit-btn");
+            if (editBtn) {
+                const id = parseInt(editBtn.getAttribute("data-id"));
+                const categoryId = parseInt(editBtn.getAttribute("data-category-id"));
+                const amount = parseFloat(editBtn.getAttribute("data-amount"));
+                const month = editBtn.getAttribute("data-month");
+                const year = editBtn.getAttribute("data-year");
+                openBudgetModal({ id, category_id: categoryId, budget_amount: amount, month, year });
+                return;
+            }
+            const deleteBtn = e.target.closest(".budget-delete-btn");
+            if (deleteBtn) {
+                const id = parseInt(deleteBtn.getAttribute("data-id"));
+                confirmDeleteBudget(id, deleteBtn);
+            }
+        });
+    }
+
 });
 
 // ======================================
@@ -53,9 +76,7 @@ async function loadBudgets() {
 
     try {
 
-        const response = await fetchWithTimeout(`${API_BASE_URL}/api/budgets/`, {
-            headers: getAuthHeaders()
-        });
+        const response = await fetchWithAuth(`${API_BASE_URL}/api/budgets/`);
 
         if (!response.ok) throw new Error("Failed to fetch budgets");
 
@@ -83,9 +104,7 @@ async function loadCategoryDropdown() {
 
     try {
 
-        const response = await fetchWithTimeout(`${API_BASE_URL}/api/categories/`, {
-            headers: getAuthHeaders()
-        });
+        const response = await fetchWithAuth(`${API_BASE_URL}/api/categories/`);
 
         if (!response.ok) throw new Error("Failed to fetch categories");
 
@@ -145,9 +164,9 @@ function renderBudgetCards(budgets) {
 
     budgets.forEach(budget => {
 
-        const icon = budget.category_icon || "📦";
+        const icon = escapeHtml(budget.category_icon || "📦");
 
-        const name = budget.category_name || "Unknown";
+        const name = escapeHtml(budget.category_name || "Unknown");
 
         const budgetAmount = Number(budget.budget_amount) || 0;
 
@@ -190,7 +209,7 @@ function renderBudgetCards(budgets) {
 
             <div class="budget-top">
 
-                <h3>${escapeHtml(icon)} ${escapeHtml(name)}</h3>
+                <h3>${icon} ${name}</h3>
 
                 <span>₹${budgetAmount.toLocaleString()}</span>
 
@@ -212,7 +231,7 @@ function renderBudgetCards(budgets) {
 
             <div style="display:flex; gap:10px; margin-top:15px; justify-content:center;">
 
-                <button class="budget-edit-btn" data-id="${budget.id}" data-category-id="${budget.category_id}" data-amount="${budgetAmount}" data-month="${budget.month || ''}" data-year="${budget.year || ''}" style="padding:6px 14px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;background:#EEF2FF;color:#6366F1;">
+                <button class="budget-edit-btn" data-id="${budget.id}" data-category-id="${budget.category_id}" data-amount="${budgetAmount}" data-month="${escapeHtml(budget.month || '')}" data-year="${escapeHtml(budget.year || '')}" style="padding:6px 14px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;background:#EEF2FF;color:#6366F1;">
                     <i class="fa-solid fa-pen"></i> Edit
                 </button>
                 <button class="budget-delete-btn" data-id="${budget.id}" style="padding:6px 14px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;background:#FEF2F2;color:#EF4444;">
@@ -225,26 +244,6 @@ function renderBudgetCards(budgets) {
 
         grid.appendChild(card);
 
-    });
-
-    // Attach event listeners to edit buttons
-    document.querySelectorAll(".budget-edit-btn").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-            const id = parseInt(btn.getAttribute("data-id"));
-            const categoryId = parseInt(btn.getAttribute("data-category-id"));
-            const amount = parseFloat(btn.getAttribute("data-amount"));
-            const month = btn.getAttribute("data-month");
-            const year = btn.getAttribute("data-year");
-            openBudgetModal({ id, category_id: categoryId, budget_amount: amount, month, year });
-        });
-    });
-
-    // Attach event listeners to delete buttons
-    document.querySelectorAll(".budget-delete-btn").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-            const id = parseInt(btn.getAttribute("data-id"));
-            confirmDeleteBudget(id);
-        });
     });
 
 }
@@ -348,9 +347,9 @@ async function saveBudget() {
         if (editingBudgetId) {
 
             // UPDATE
-            const response = await fetchWithTimeout(`${API_BASE_URL}/api/budgets/${editingBudgetId}`, {
+            const response = await fetchWithAuth(`${API_BASE_URL}/api/budgets/${editingBudgetId}`, {
                 method: "PUT",
-                headers: Object.assign({ "Content-Type": "application/json" }, getAuthHeaders()),
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ category_id, amount, month, year }),
             });
 
@@ -369,9 +368,9 @@ async function saveBudget() {
         } else {
 
             // CREATE
-            const response = await fetchWithTimeout(`${API_BASE_URL}/api/budgets/`, {
+            const response = await fetchWithAuth(`${API_BASE_URL}/api/budgets/`, {
                 method: "POST",
-                headers: Object.assign({ "Content-Type": "application/json" }, getAuthHeaders()),
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ category_id, amount, month, year }),
             });
 
@@ -414,7 +413,7 @@ async function saveBudget() {
 // Delete Budget
 // ======================================
 
-async function confirmDeleteBudget(id) {
+async function confirmDeleteBudget(id, button) {
 
     let confirmed = false;
 
@@ -433,11 +432,18 @@ async function confirmDeleteBudget(id) {
 
     if (!confirmed) return;
 
+    // Show spinner on the clicked delete button after confirmation
+    let originalHTML = "";
+    if (button) {
+        originalHTML = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = '<span class="button-spinner"></span>';
+    }
+
     try {
 
-        const response = await fetchWithTimeout(`${API_BASE_URL}/api/budgets/${id}`, {
-            method: "DELETE",
-            headers: getAuthHeaders()
+        const response = await fetchWithAuth(`${API_BASE_URL}/api/budgets/${id}`, {
+            method: "DELETE"
         });
 
         if (!response.ok) {
@@ -464,7 +470,11 @@ async function confirmDeleteBudget(id) {
         }
         console.error(error);
 
+    } finally {
+        if (button) {
+            button.disabled = false;
+            button.innerHTML = originalHTML;
+        }
     }
 
 }
-

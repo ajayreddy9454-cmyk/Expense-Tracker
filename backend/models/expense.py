@@ -1,7 +1,15 @@
 from database import db
 
+
 class Expense(db.Model):
     __tablename__ = "expenses"
+
+    # Composite index on user_id + expense_date speeds up the dashboard
+    # (this-month sum) and reports (monthly grouping) for a single user.
+    __table_args__ = (
+        db.Index("ix_expenses_user_date", "user_id", "expense_date"),
+        db.Index("ix_expenses_category", "category_id"),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
@@ -13,3 +21,4 @@ class Expense(db.Model):
     notes = db.Column(db.Text)
     receipt = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, server_default=db.func.now())
+

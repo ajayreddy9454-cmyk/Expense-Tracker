@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy import text
 import os
 import uuid
 from datetime import datetime
@@ -19,6 +20,22 @@ AVATAR_UPLOAD_DIR = os.path.join(
 os.makedirs(AVATAR_UPLOAD_DIR, exist_ok=True)
 
 
+def _profile_image_url(user):
+    """Return the avatar URL only if the file actually exists on disk.
+
+    Render uses an ephemeral filesystem: uploaded avatars disappear on every
+    redeploy/restart. Returning a URL to a missing file makes the frontend
+    cache a broken image forever. Instead, return None so the frontend falls
+    back to the default avatar and clears any stale cache.
+    """
+    if not user.profile_image:
+        return None
+    candidate = os.path.join(AVATAR_UPLOAD_DIR, os.path.basename(user.profile_image))
+    if os.path.exists(candidate):
+        return f"/static/uploads/profile/{user.profile_image}"
+    return None
+
+
 # ============================
 # GET /api/profile/
 # ============================
@@ -28,29 +45,24 @@ def get_profile():
     if not user:
         return jsonify({"message": "Authentication required"}), 401
 
-    # Account statistics
-    total_expenses = (
-        db.session.query(db.func.count(Expense.id))
-        .filter(Expense.user_id == user.id)
-        .scalar()
-    ) or 0
+    # Account statistics — three counts computed in a single query.
+    stats_row = db.session.execute(
+        text("""
+            SELECT COUNT(e.id) AS total_expenses,
+                   COUNT(DISTINCT e.category_id) AS categories_used,
+                   (SELECT COUNT(*) FROM budgets WHERE user_id = :uid) AS budgets_created
+            FROM expenses e
+            WHERE e.user_id = :uid
+        """),
+        {"uid": user.id},
+    ).fetchone()
 
-    categories_used = (
-        db.session.query(db.func.count(db.func.distinct(Expense.category_id)))
-        .filter(Expense.user_id == user.id)
-        .scalar()
-    ) or 0
+    total_expenses = stats_row.total_expenses or 0
+    categories_used = stats_row.categories_used or 0
+    budgets_created = stats_row.budgets_created or 0
 
-    budgets_created = (
-        db.session.query(db.func.count(Budget.id))
-        .filter(Budget.user_id == user.id)
-        .scalar()
-    ) or 0
-
-    # Profile image URL
-    profile_image_url = None
-    if user.profile_image:
-        profile_image_url = f"/static/uploads/profile/{user.profile_image}"
+    # Profile image URL (only if the file exists on disk)
+    profile_image_url = _profile_image_url(user)
 
     # Date of birth string
     dob_str = ""
@@ -196,11 +208,21 @@ def upload_avatar():
             "message": "Invalid file type. Allowed: png, jpg, jpeg, gif, webp"
         }), 400
 
+    # Validate file size (5 MB cap)
+    avatar_file.seek(0, os.SEEK_END)
+    size = avatar_file.tell()
+    avatar_file.seek(0)
+    if size > 5 * 1024 * 1024:
+        return jsonify({"message": "File too large. Maximum size is 5MB."}), 400
+
     # Delete old avatar if exists
     if user.profile_image:
         old_path = os.path.join(AVATAR_UPLOAD_DIR, user.profile_image)
         if os.path.exists(old_path):
-            os.remove(old_path)
+            try:
+                os.remove(old_path)
+            except OSError:
+                pass
 
     # Save new avatar
     unique_name = f"avatar_{uuid.uuid4().hex}.{ext}"

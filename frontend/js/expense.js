@@ -19,10 +19,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         initializeExpenseForm();
     }
 
-    // If on expenses.html page, load categories for filter and setup filtering
+    // If on expenses.html page, load categories for filter.
+    // Load the category filter and the expense list in parallel since they
+    // are independent requests — this removes a full network round-trip from
+    // startup.
     if (document.querySelector(".expense-filters")) {
-        await loadCategoryFilter();
+        await Promise.all([loadCategoryFilter(), refreshExpenses()]);
         setupFilters();
+        loadExpenses();
+    } else if (document.querySelector(".expense-table")) {
+        // Only fetch the expense list when a table exists on this page.
+        // On add_expense.html (no table) this avoids a redundant network call.
+        await refreshExpenses();
+        loadExpenses();
     }
 
     // Edit flow: add_expense.html?editId=<id>
@@ -34,11 +43,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         window.history.replaceState({}, "", url.toString());
 
         await tryBeginEditFromId(idNum);
-    } else if (document.querySelector(".expense-table")) {
-        // Only fetch the expense list when a table exists on this page.
-        // On add_expense.html (no table) this avoids a redundant network call.
-        await refreshExpenses();
-        loadExpenses();
     }
 });
 
@@ -48,10 +52,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 async function refreshExpenses() {
     try {
-        const res = await fetchWithTimeout(EXPENSES_API_URL, {
-            method: "GET",
-            headers: getAuthHeaders()
-        });
+        const res = await fetchWithAuth(EXPENSES_API_URL, { method: "GET" });
 
         if (!res.ok) {
             const msg = await extractErrorMessage(new Error("Failed to load expenses"), res);
@@ -81,9 +82,7 @@ async function loadCategoriesDropdown() {
     if (!select) return;
 
     try {
-        const res = await fetchWithTimeout(`${API_BASE_URL}/api/categories/`, {
-            headers: getAuthHeaders()
-        });
+        const res = await fetchWithAuth(`${API_BASE_URL}/api/categories/`);
         if (!res.ok) throw new Error("Failed to load categories");
 
         const categories = await res.json();
@@ -163,10 +162,10 @@ function initializeExpenseForm() {
             const endpoint = isEditing ? `${EXPENSES_API_URL}${editingExpenseId}` : EXPENSES_API_URL;
             const method = isEditing ? "PUT" : "POST";
 
-        const file =
-            receiptInput && receiptInput.files && receiptInput.files.length > 0
-                ? receiptInput.files[0]
-                : null;
+            const file =
+                receiptInput && receiptInput.files && receiptInput.files.length > 0
+                    ? receiptInput.files[0]
+                    : null;
 
             // Show loading state on submit button
             if (submitBtn) {
@@ -185,16 +184,15 @@ function initializeExpenseForm() {
                 formData.append("notes", payload.notes);
                 formData.append("receipt", file);
 
-                res = await fetchWithTimeout(endpoint, {
+                res = await fetchWithAuth(endpoint, {
                     method,
-                    headers: getAuthHeaders(),  // No Content-Type — browser sets multipart boundary
                     body: formData
                 });
             } else {
                 // Send JSON (no file) — simpler, avoids CORS/form-data issues on Render
-                res = await fetchWithTimeout(endpoint, {
+                res = await fetchWithAuth(endpoint, {
                     method,
-                    headers: getAuthHeaders("application/json"),
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
                 });
             }
@@ -254,6 +252,42 @@ function updateSubmitLabel() {
 }
 
 // ======================================
+// Shared Row Builder
+// ======================================
+
+function buildExpenseRowHtml(expense) {
+    const categoryName = expense.category_name || categoryMap[expense.category_id] || "Uncategorized";
+    const hasNotes = expense.notes && String(expense.notes).trim() !== "";
+    const receiptHtml = expense.receipt
+        ? `<a class="receipt-link" href="${API_BASE_URL}/static/uploads/${encodeURIComponent(expense.receipt)}" target="_blank" rel="noopener">View Receipt</a>`
+        : "No Receipt";
+
+    return `
+        <tr>
+            <td>${escapeHtml(expense.title || "")}</td>
+            <td>${escapeHtml(categoryName)}</td>
+            <td>${escapeHtml(expense.expense_date || "")}</td>
+            <td>Rs.${Number(expense.amount || 0).toLocaleString()}</td>
+            <td>
+                <span class="completed">Completed</span>
+            </td>
+            <td>
+                <div class="expense-actions" style="display:flex; gap:8px; align-items:center;">
+                    ${hasNotes ? `<button class="notes-btn" data-id="${expense.id}" title="View Notes"><i class="fa-solid fa-note-sticky"></i></button>` : ""}
+                    ${receiptHtml}
+                    <button class="edit-btn" onclick="editExpense(${expense.id})">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+                    <button class="delete-btn" onclick="deleteExpense(${expense.id})">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `;
+}
+
+// ======================================
 // View Expenses table
 // ======================================
 
@@ -272,33 +306,77 @@ function loadExpenses() {
         return;
     }
 
-    const rows = expenses.map(expense => {
-        const categoryName = expense.category_name || categoryMap[expense.category_id] || "Uncategorized";
-        return `
-            <tr>
-                <td>${escapeHtml(expense.title || "")}</td>
-                <td>${escapeHtml(categoryName)}</td>
-                <td>${escapeHtml(expense.expense_date || "")}</td>
-                <td>Rs.${Number(expense.amount || 0).toLocaleString()}</td>
-                <td>
-                    <span class="completed">Completed</span>
-                </td>
-                <td>
-                    <div class="expense-actions" style="display:flex; gap:8px; align-items:center;">
-                        ${expense.receipt ? `<a href="${API_BASE_URL}/static/uploads/${escapeHtml(expense.receipt)}" target="_blank" rel="noopener">View Receipt</a>` : 'No Receipt'}
-                        <button class="edit-btn" onclick="editExpense(${expense.id})">
-                            <i class="fa-solid fa-pen-to-square"></i>
-                        </button>
-                        <button class="delete-btn" onclick="deleteExpense(${expense.id})">
-                            <i class="fa-solid fa-trash"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `;
+    const rows = expenses.map(expense => buildExpenseRowHtml(expense));
+    tableBody.innerHTML = rows.join("");
+
+    // Delegate "View Notes" clicks after render (single shared handler below).
+    attachNotesButtonHandler();
+}
+
+// ======================================
+// Notes Modal
+// ======================================
+
+function showNotesModal(notes) {
+    // Create a lightweight modal for viewing notes
+    const overlay = document.createElement("div");
+    overlay.className = "modal-confirm-overlay notes-view";
+    overlay.innerHTML = `
+        <div class="modal-confirm">
+            <div class="modal-confirm-header">
+                <div class="modal-confirm-icon info-icon">
+                    <i class="fa-solid fa-note-sticky"></i>
+                </div>
+                <h3 class="modal-confirm-title">Expense Notes</h3>
+            </div>
+            <div class="modal-confirm-body">
+                <p class="notes-view-text">${escapeHtml(notes || "No notes added.")}</p>
+            </div>
+            <div class="modal-confirm-footer">
+                <button class="modal-confirm-btn modal-confirm-btn-cancel" id="notesModalClose">Close</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    // Ensure the overlay is active/animated
+    requestAnimationFrame(() => overlay.classList.add("active"));
+
+    const closeBtn = overlay.querySelector("#notesModalClose");
+
+    function closeNotesModal() {
+        overlay.classList.remove("active");
+        document.removeEventListener("keydown", escHandler);
+        setTimeout(() => {
+            if (overlay.parentElement) {
+                overlay.parentElement.removeChild(overlay);
+            }
+        }, 250);
+    }
+
+    closeBtn.addEventListener("click", closeNotesModal);
+    overlay.addEventListener("click", (e) => {
+        if (e.target === overlay) closeNotesModal();
     });
 
-    tableBody.innerHTML = rows.join("");
+    function escHandler(e) {
+        if (e.key === "Escape") closeNotesModal();
+    }
+    document.addEventListener("keydown", escHandler);
+}
+
+// Attach notes-button click handlers (single delegation per render)
+function attachNotesButtonHandler() {
+    document.querySelectorAll(".notes-btn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const id = Number(btn.getAttribute("data-id"));
+            const expense = expenses.find(x => x.id === id);
+            if (expense) {
+                showNotesModal(expense.notes || "No notes added.");
+            }
+        });
+    });
 }
 
 // ======================================
@@ -386,9 +464,8 @@ async function deleteExpense(id) {
     if (!confirmed) return;
 
     try {
-        const res = await fetchWithTimeout(`${EXPENSES_API_URL}${id}`, {
-            method: "DELETE",
-            headers: getAuthHeaders()
+        const res = await fetchWithAuth(`${EXPENSES_API_URL}${id}`, {
+            method: "DELETE"
         });
 
         if (!res.ok) {
@@ -423,9 +500,7 @@ async function loadCategoryFilter() {
     if (!select) return;
 
     try {
-        const res = await fetchWithTimeout(`${API_BASE_URL}/api/categories/`, {
-            headers: getAuthHeaders()
-        });
+        const res = await fetchWithAuth(`${API_BASE_URL}/api/categories/`);
         if (!res.ok) throw new Error("Failed to load categories");
 
         const categories = await res.json();
@@ -470,9 +545,13 @@ function setupFilters() {
 }
 
 function filterExpenses() {
-    const searchValue = document.getElementById("expense-search")?.value?.toLowerCase().trim() || "";
-    const categoryValue = document.getElementById("expense-category")?.value || "";
-    const dateValue = document.getElementById("expense-date")?.value || "";
+    const searchInput = document.getElementById("expense-search");
+    const categorySelect = document.getElementById("expense-category");
+    const dateInput = document.getElementById("expense-date");
+
+    const searchValue = searchInput ? searchInput.value.toLowerCase().trim() : "";
+    const categoryValue = categorySelect ? categorySelect.value : "";
+    const dateValue = dateInput ? dateInput.value : "";
 
     // Start with all expenses
     let filtered = expenses;
@@ -517,32 +596,8 @@ function renderFilteredExpenses(filteredExpenses) {
         return;
     }
 
-    const rows = filteredExpenses.map(expense => {
-        const categoryName = expense.category_name || categoryMap[expense.category_id] || "Uncategorized";
-        return `
-            <tr>
-                <td>${escapeHtml(expense.title || "")}</td>
-                <td>${escapeHtml(categoryName)}</td>
-                <td>${escapeHtml(expense.expense_date || "")}</td>
-                <td>Rs.${Number(expense.amount || 0).toLocaleString()}</td>
-                <td>
-                    <span class="completed">Completed</span>
-                </td>
-                <td>
-                    <div class="expense-actions" style="display:flex; gap:8px; align-items:center;">
-                        ${expense.receipt ? `<a href="${API_BASE_URL}/static/uploads/${escapeHtml(expense.receipt)}" target="_blank" rel="noopener">View Receipt</a>` : 'No Receipt'}
-                        <button class="edit-btn" onclick="editExpense(${expense.id})">
-                            <i class="fa-solid fa-pen-to-square"></i>
-                        </button>
-                        <button class="delete-btn" onclick="deleteExpense(${expense.id})">
-                            <i class="fa-solid fa-trash"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `;
-    });
-
+    const rows = filteredExpenses.map(expense => buildExpenseRowHtml(expense));
     tableBody.innerHTML = rows.join("");
-}
 
+    attachNotesButtonHandler();
+}

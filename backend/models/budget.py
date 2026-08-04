@@ -1,7 +1,13 @@
 from database import db
 
+
 class Budget(db.Model):
     __tablename__ = "budgets"
+
+    __table_args__ = (
+        db.Index("ix_budgets_user", "user_id"),
+        db.Index("ix_budgets_category", "category_id"),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False)

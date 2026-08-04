@@ -29,9 +29,7 @@ async function loadReports() {
 
     try {
 
-const response = await fetchWithTimeout(`${API_BASE_URL}/api/reports/`, {
-            headers: getAuthHeaders()
-        });
+        const response = await fetchWithAuth(`${API_BASE_URL}/api/reports/`);
 
         if (!response.ok) {
             const msg = await extractErrorMessage(new Error("Failed to load reports"), response);
@@ -128,7 +126,7 @@ function populateMonthlyExpenses(monthlyExpenses) {
 
 function downloadPDFReport() {
 
-if (!reportData) {
+    if (!reportData) {
         if (typeof showToast === "function") {
             showToast("Report data is not loaded yet. Please wait and try again.", "warning");
         } else {
@@ -547,5 +545,3 @@ function renderCategoryChart(categoryExpenses) {
     });
 
 }
-
-

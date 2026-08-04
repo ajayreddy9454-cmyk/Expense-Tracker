@@ -40,6 +40,27 @@ document.addEventListener("DOMContentLoaded", () => {
     const searchInput = document.getElementById("category-search");
     if (searchInput) searchInput.addEventListener("input", filterCategories);
 
+    // Event delegation: ONE listener on the grid for edit + delete buttons.
+    // This avoids re-attaching listeners on every render/filter keystroke.
+    const grid = document.getElementById("categories-grid");
+    if (grid) {
+        grid.addEventListener("click", (e) => {
+            const editBtn = e.target.closest(".category-edit-btn");
+            if (editBtn) {
+                const id = editBtn.getAttribute("data-id");
+                const name = editBtn.getAttribute("data-name");
+                const icon = editBtn.getAttribute("data-icon");
+                openModal({ id: parseInt(id), name, icon });
+                return;
+            }
+            const deleteBtn = e.target.closest(".category-delete-btn");
+            if (deleteBtn) {
+                const id = deleteBtn.getAttribute("data-id");
+                confirmDelete(parseInt(id), deleteBtn);
+            }
+        });
+    }
+
 });
 
 // ======================================
@@ -57,9 +78,7 @@ async function loadCategories() {
 
     try {
 
-        const response = await fetchWithTimeout(`${API_BASE_URL}/api/categories/`, {
-            headers: getAuthHeaders()
-        });
+        const response = await fetchWithAuth(`${API_BASE_URL}/api/categories/`);
 
         if (!response.ok) {
             const msg = await extractErrorMessage(new Error("Failed to load categories"), response);
@@ -107,19 +126,22 @@ function renderCategories(categories) {
 
     categories.forEach(cat => {
 
-        const icon = cat.icon || "📦";
-        const name = cat.name ?? "Unknown";
+        // XSS fix: use escapeHtml() for dynamic values that come from the
+        // user/API. Icons can be arbitrary text, names come from the DB.
+        const icon = escapeHtml(cat.icon || "📦");
+        const name = escapeHtml(cat.name ?? "Unknown");
+        const count = Number(cat.expense_count) || 0;
 
         const card = document.createElement("div");
         card.className = "category-card";
-        card.setAttribute("data-name", name.toLowerCase());
+        card.setAttribute("data-name", (cat.name ? String(cat.name) : "unknown").toLowerCase());
 
         card.innerHTML = `
             <div class="category-icon">${icon}</div>
             <h3>${name}</h3>
-            <p>${cat.expense_count ?? 0} Expenses</p>
+            <p>${count} Expenses</p>
             <div class="category-card-actions">
-                <button class="category-edit-btn" data-id="${cat.id}" data-name="${name}" data-icon="${icon}">
+                <button class="category-edit-btn" data-id="${cat.id}" data-name="${encodeURIComponent(cat.name || "")}" data-icon="${encodeURIComponent(cat.icon || "")}">
                     <i class="fa-solid fa-pen"></i> Edit
                 </button>
                 <button class="category-delete-btn" data-id="${cat.id}">
@@ -132,24 +154,6 @@ function renderCategories(categories) {
 
     });
 
-    // Attach event listeners to edit buttons
-    document.querySelectorAll(".category-edit-btn").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-            const id = btn.getAttribute("data-id");
-            const name = btn.getAttribute("data-name");
-            const icon = btn.getAttribute("data-icon");
-            openModal({ id: parseInt(id), name, icon });
-        });
-    });
-
-    // Attach event listeners to delete buttons
-    document.querySelectorAll(".category-delete-btn").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-            const id = btn.getAttribute("data-id");
-            confirmDelete(parseInt(id));
-        });
-    });
-
 }
 
 // ======================================
@@ -158,7 +162,10 @@ function renderCategories(categories) {
 
 function filterCategories() {
 
-    const query = document.getElementById("category-search").value.toLowerCase().trim();
+    const searchInput = document.getElementById("category-search");
+    if (!searchInput) return;
+
+    const query = searchInput.value.toLowerCase().trim();
 
     if (!query) {
 
@@ -254,9 +261,9 @@ async function saveCategory() {
         if (editingCategoryId) {
 
             // UPDATE
-            const response = await fetchWithTimeout(`${API_BASE_URL}/api/categories/${editingCategoryId}`, {
+            const response = await fetchWithAuth(`${API_BASE_URL}/api/categories/${editingCategoryId}`, {
                 method: "PUT",
-                headers: Object.assign({ "Content-Type": "application/json" }, getAuthHeaders()),
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name, icon }),
             });
 
@@ -275,9 +282,9 @@ async function saveCategory() {
         } else {
 
             // CREATE
-            const response = await fetchWithTimeout(`${API_BASE_URL}/api/categories/`, {
+            const response = await fetchWithAuth(`${API_BASE_URL}/api/categories/`, {
                 method: "POST",
-                headers: Object.assign({ "Content-Type": "application/json" }, getAuthHeaders()),
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name, icon }),
             });
 
@@ -320,7 +327,7 @@ async function saveCategory() {
 // Delete Category
 // ======================================
 
-async function confirmDelete(id) {
+async function confirmDelete(id, button) {
 
     let confirmed = false;
 
@@ -339,11 +346,18 @@ async function confirmDelete(id) {
 
     if (!confirmed) return;
 
+    // Show a spinner on the clicked delete button after confirmation
+    let originalHTML = "";
+    if (button) {
+        originalHTML = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = '<span class="button-spinner"></span>';
+    }
+
     try {
 
-const response = await fetchWithTimeout(`${API_BASE_URL}/api/categories/${id}`, {
-            method: "DELETE",
-            headers: getAuthHeaders()
+        const response = await fetchWithAuth(`${API_BASE_URL}/api/categories/${id}`, {
+            method: "DELETE"
         });
 
         if (!response.ok) {
@@ -370,7 +384,11 @@ const response = await fetchWithTimeout(`${API_BASE_URL}/api/categories/${id}`, 
         }
         console.error(error);
 
+    } finally {
+        if (button) {
+            button.disabled = false;
+            button.innerHTML = originalHTML;
+        }
     }
 
 }
-

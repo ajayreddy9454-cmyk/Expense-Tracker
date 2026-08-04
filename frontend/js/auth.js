@@ -7,6 +7,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     initializeLogin();
     initializeRegister();
+    initializeForgotPassword();
+    initializeResetPassword();
 
     // Redirect to dashboard if already logged in
     if (isUserLoggedIn() && (window.location.pathname.endsWith("index.html") || window.location.pathname.endsWith("register.html"))) {
@@ -201,6 +203,166 @@ function initializeRegister() {
             showError(msg);
         } finally {
             // Always re-enable the button so it is never stuck loading
+            setButtonLoading(button, false);
+        }
+    });
+}
+
+// ======================================
+// Forgot Password
+// ======================================
+
+function initializeForgotPassword() {
+
+    const form = document.getElementById("forgotPasswordForm");
+    if (!form) return;
+
+    const emailInput = document.getElementById("forgot_email");
+    const button = document.getElementById("forgotPasswordButton");
+    const messageEl = form.querySelector(".form-message");
+
+    if (!emailInput || !button) return;
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        if (button.disabled) return;
+
+        const email = emailInput.value.trim();
+
+        if (!email) {
+            showError("Please enter your email address.");
+            return;
+        }
+
+        if (!isValidEmail(email)) {
+            showError("Please enter a valid email address.");
+            return;
+        }
+
+        setButtonLoading(button, true, "Sending...");
+
+        try {
+            const response = await fetchWithTimeout(`${API_BASE_URL}/api/auth/forgot-password`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ email })
+            });
+
+            const data = await response.json().catch(() => null);
+
+            if (!response.ok) {
+                const msg = (data && data.message) || "Unable to process your request. Please try again.";
+                showError(msg);
+                return;
+            }
+
+            // SMTP not configured — show the reset link so the flow works
+            if (data && data.reset_url) {
+                if (messageEl) {
+                    messageEl.innerHTML =
+                        "Password reset link generated. " +
+                        '<a href="' + escapeHtml(data.reset_url) + '" target="_blank" rel="noopener">Open reset page</a> ' +
+                        "(if your server has no email configured, use this link.)";
+                    messageEl.className = "form-message success";
+                    messageEl.style.display = "block";
+                } else {
+                    showToast("Check your email for the reset link.", "success");
+                }
+                form.reset();
+                return;
+            }
+
+            showToast(data && data.message ? data.message : "If an account exists for that email, a reset link has been sent.", "success");
+            form.reset();
+        } catch (err) {
+            console.error("Forgot password error:", err);
+            const msg = await extractErrorMessage(err, null);
+            showError(msg);
+        } finally {
+            setButtonLoading(button, false);
+        }
+    });
+}
+
+// ======================================
+// Reset Password
+// ======================================
+
+function initializeResetPassword() {
+
+    const form = document.getElementById("resetPasswordForm");
+    if (!form) return;
+
+    const passwordInput = document.getElementById("reset_password");
+    const confirmInput = document.getElementById("reset_confirm_password");
+    const button = document.getElementById("resetPasswordButton");
+    const messageEl = form.querySelector(".form-message");
+
+    if (!passwordInput || !confirmInput || !button) return;
+
+    // Extract token from URL query string
+    const url = new URL(window.location.href);
+    const token = url.searchParams.get("token");
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        if (button.disabled) return;
+
+        const newPassword = passwordInput.value;
+        const confirmPassword = confirmInput.value;
+
+        if (!token) {
+            showError("Reset link is invalid or missing. Please request a new one.");
+            return;
+        }
+
+        if (!newPassword || newPassword.length < 6) {
+            showError("New password must be at least 6 characters.");
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            showError("New password and confirm password do not match.");
+            return;
+        }
+
+        setButtonLoading(button, true, "Resetting...");
+
+        try {
+            const response = await fetchWithTimeout(`${API_BASE_URL}/api/auth/reset-password`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ token, new_password: newPassword })
+            });
+
+            const data = await response.json().catch(() => null);
+
+            if (!response.ok) {
+                const msg = (data && data.message) || "Unable to reset password. Please try again.";
+                showError(msg);
+                return;
+            }
+
+            if (messageEl) {
+                messageEl.textContent = "Password reset successfully! Redirecting to sign in...";
+                messageEl.className = "form-message success";
+                messageEl.style.display = "block";
+            }
+
+            setTimeout(() => {
+                window.location.href = "index.html";
+            }, 1500);
+        } catch (err) {
+            console.error("Reset password error:", err);
+            const msg = await extractErrorMessage(err, null);
+            showError(msg);
+        } finally {
             setButtonLoading(button, false);
         }
     });

@@ -18,32 +18,31 @@ def get_dashboard():
 
     uid = user.id
 
-    total_expenses = (
-        db.session.query(db.func.count(Expense.id))
-        .filter(Expense.user_id == uid)
-        .scalar()
-    ) or 0
-
-    total_expense_amount = (
-        db.session.query(db.func.coalesce(db.func.sum(Expense.amount), 0))
-        .filter(Expense.user_id == uid)
-        .scalar()
-    ) or 0
-
     now = datetime.utcnow()
     current_month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
-    this_month_expenses = (
-        db.session.query(db.func.coalesce(db.func.sum(Expense.amount), 0))
-        .filter(Expense.expense_date >= current_month_start, Expense.user_id == uid)
-        .scalar()
-    ) or 0
+    # Single aggregate query replaces 4 separate COUNT/SUM queries. Computes
+    # total expense count, lifetime amount, this-month amount and distinct
+    # category count in one pass over the user's expenses.
+    summary_row = db.session.execute(
+        text("""
+            SELECT COUNT(e.id) AS total_expenses,
+                   COALESCE(SUM(e.amount), 0) AS total_expense_amount,
+                   COALESCE(SUM(
+                       CASE WHEN e.expense_date >= :month_start
+                            THEN e.amount ELSE 0 END
+                   ), 0) AS this_month_expenses,
+                   COUNT(DISTINCT e.category_id) AS categories_used
+            FROM expenses e
+            WHERE e.user_id = :uid
+        """),
+        {"uid": uid, "month_start": current_month_start},
+    ).fetchone()
 
-    categories_used = (
-        db.session.query(db.func.count(db.func.distinct(Expense.category_id)))
-        .filter(Expense.user_id == uid)
-        .scalar()
-    ) or 0
+    total_expenses = summary_row.total_expenses or 0
+    total_expense_amount = summary_row.total_expense_amount or 0
+    this_month_expenses = summary_row.this_month_expenses or 0
+    categories_used = summary_row.categories_used or 0
 
     top_categories_rows = db.session.execute(
         text("""
@@ -107,4 +106,3 @@ def get_dashboard():
             "recent_expenses": recent_expenses,
         }
     )
-

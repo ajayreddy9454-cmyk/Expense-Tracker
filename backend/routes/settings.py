@@ -76,7 +76,17 @@ def save_settings():
         settings.language = language
 
     if "notifications" in data:
-        settings.notifications = bool(data["notifications"])
+        # Fix: bool("false") == True. Accept real booleans, numbers, and the
+        # string forms "true"/"false" (case-insensitive).
+        raw = data["notifications"]
+        if isinstance(raw, bool):
+            settings.notifications = raw
+        elif isinstance(raw, (int, float)):
+            settings.notifications = bool(raw)
+        elif isinstance(raw, str):
+            settings.notifications = raw.strip().lower() in ("true", "1", "yes", "on")
+        else:
+            settings.notifications = bool(raw)
 
     if "currency" in data:
         settings.currency = str(data["currency"])

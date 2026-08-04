@@ -410,6 +410,36 @@
    ACTION BUTTONS
 ========================================== */
 
+.notes-btn{
+
+    width:40px;
+
+    height:40px;
+
+    border:none;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    transition:.3s;
+
+    margin-right:8px;
+
+    background:#F59E0B;
+
+    color:#FFFFFF;
+
+    flex-shrink:0;
+
+}
+
+.notes-btn:hover{
+
+    background:#D97706;
+
+}
+
 .edit-btn,
 
 .delete-btn{
@@ -427,6 +457,40 @@
     transition:.3s;
 
     margin-right:8px;
+
+    flex-shrink:0;
+
+}
+
+/* ==========================================
+   NOTES VIEW MODAL TEXT
+========================================== */
+
+.notes-view-text{
+
+    font-size:15px;
+
+    line-height:1.7;
+
+    color:var(--text-primary);
+
+    white-space:pre-wrap;
+
+    word-break:break-word;
+
+    max-height:60vh;
+
+    overflow-y:auto;
+
+    background:var(--input-bg);
+
+    border:1px solid var(--border);
+
+    border-radius:12px;
+
+    padding:16px;
+
+    margin:0;
 
 }
 

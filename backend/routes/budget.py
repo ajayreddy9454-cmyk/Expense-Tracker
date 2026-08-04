@@ -18,7 +18,13 @@ def get_budgets():
     if not user:
         return jsonify({"message": "Authentication required"}), 401
 
-    # Fetch all budgets for this user, joined with categories
+    # Single optimized query: budgets joined with categories and a LEFT JOIN
+    # to expenses for the aggregate spent amount. This eliminates the N+1
+    # per-budget SUM query that the old implementation issued in a loop.
+    #
+    # Budgets with no month/year have no matching expenses (the MONTH(e)=b.month
+    # comparison simply never matches NULL), so their spent amount is 0 —
+    # identical to the old per-budget behaviour.
     rows = db.session.execute(
         text("""
             SELECT
@@ -28,40 +34,28 @@ def get_budgets():
                 c.icon AS category_icon,
                 b.amount AS budget_amount,
                 b.month,
-                b.year
+                b.year,
+                COALESCE(SUM(e.amount), 0) AS spent_amount
             FROM budgets b
             JOIN categories c ON b.category_id = c.id
+            LEFT JOIN expenses e
+                ON e.category_id = b.category_id
+                AND e.user_id = b.user_id
+                AND MONTH(e.expense_date) = b.month
+                AND YEAR(e.expense_date) = b.year
             WHERE b.user_id = :uid
+            GROUP BY
+                b.id, b.category_id, c.name, c.icon,
+                b.amount, b.month, b.year
             ORDER BY b.id
-        """), {"uid": user.id}
+        """),
+        {"uid": user.id},
     ).fetchall()
 
     budget_list = []
     for row in rows:
         budget_amount = float(row.budget_amount)
-        month_val = row.month
-        year_val = row.year
-
-        spent_amount = 0.0
-        if month_val is not None and year_val is not None:
-            result = db.session.execute(
-                text("""
-                    SELECT COALESCE(SUM(amount), 0)
-                    FROM expenses
-                    WHERE category_id = :cat_id
-                      AND MONTH(expense_date) = :month
-                      AND YEAR(expense_date) = :year
-                      AND user_id = :uid
-                """),
-                {
-                    "cat_id": int(row.category_id),
-                    "month": int(month_val),
-                    "year": int(year_val),
-                    "uid": user.id,
-                }
-            ).scalar()
-            spent_amount = float(result) if result else 0.0
-
+        spent_amount = float(row.spent_amount or 0.0)
         remaining_amount = budget_amount - spent_amount
 
         budget_list.append({
@@ -72,8 +66,8 @@ def get_budgets():
             "budget_amount": budget_amount,
             "spent_amount": spent_amount,
             "remaining_amount": remaining_amount,
-            "month": int(month_val) if month_val else None,
-            "year": int(year_val) if year_val else None,
+            "month": int(row.month) if row.month else None,
+            "year": int(row.year) if row.year else None,
         })
 
     return jsonify(budget_list)
@@ -88,14 +82,14 @@ def add_budget():
     if not user:
         return jsonify({"message": "Authentication required"}), 401
 
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
 
     category_id = data.get("category_id")
     amount = data.get("amount")
     month = data.get("month")
     year = data.get("year")
 
-    if not category_id or not amount:
+    if not category_id or amount in (None, ""):
         return jsonify({"message": "category_id and amount are required"}), 400
 
     # Validate category exists and belongs to this user
@@ -129,25 +123,25 @@ def update_budget(id):
     if not budget:
         return jsonify({"message": "Budget not found"}), 404
 
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
 
     category_id = data.get("category_id")
     amount = data.get("amount")
     month = data.get("month")
     year = data.get("year")
 
-    if category_id is not None:
+    if category_id is not None and category_id != "":
         # Verify category belongs to user
         cat = Category.query.filter_by(id=int(category_id), user_id=user.id).first()
         if not cat:
             return jsonify({"message": "Category not found"}), 404
         budget.category_id = int(category_id)
 
-    if amount is not None:
+    if amount is not None and amount != "":
         budget.amount = float(amount)
     if month is not None:
         budget.month = str(month)
-    if year is not None:
+    if year is not None and year != "":
         budget.year = int(year)
 
     db.session.commit()

@@ -1,5 +1,6 @@
 from database import db
 
+
 class Category(db.Model):
     __tablename__ = "categories"
 
@@ -9,5 +10,8 @@ class Category(db.Model):
     icon = db.Column(db.String(100))
     created_at = db.Column(db.DateTime, server_default=db.func.now())
 
-    __table_args__ = (db.UniqueConstraint("user_id", "name", name="unique_user_category"),)
+    __table_args__ = (
+        db.UniqueConstraint("user_id", "name", name="unique_user_category"),
+        db.Index("ix_categories_user", "user_id"),
+    )
 

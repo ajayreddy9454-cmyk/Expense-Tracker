@@ -157,7 +157,6 @@ function setActiveMenu() {
 
     const currentPage = window.location.pathname.split("/").pop();
 
-
     // All sidebar menu items are <li> under the sidebar nav.
     const items = document.querySelectorAll(".sidebar nav ul > li");
     if (!items || items.length === 0) return;
@@ -382,6 +381,37 @@ function getAvatarTimestampKey() {
     return userId ? "profile_image_ts_" + userId : "profile_image_ts";
 }
 
+/**
+ * Set an avatar on an image element with a guard that clears the stale
+ * localStorage cache if the file can no longer be loaded (e.g. Render
+ * redeployed and the ephemeral avatar is gone). Falls back to the default
+ * avatar so the user never sees a broken image or a cached 404 URL.
+ */
+function setAvatarSrc(img, src) {
+    if (!img) return;
+
+    const cacheKey = getAvatarCacheKey();
+    const tsKey = getAvatarTimestampKey();
+
+    img.onerror = function () {
+        // Only handle the first failure per src swap
+        this.onerror = null;
+
+        // If this was a remote URL, it means the file is gone (ephemeral
+        // Render storage, redeploy, etc.). Clear the stale cache entry so a
+        // later navigation does not keep re-using the broken URL.
+        if (this.src && this.src !== DEFAULT_AVATAR && this.src.indexOf("default-avatar") === -1) {
+            localStorage.removeItem(cacheKey);
+            localStorage.removeItem(tsKey);
+        }
+
+        // Fall back to the bundled default avatar
+        this.src = DEFAULT_AVATAR;
+    };
+
+    img.src = src || DEFAULT_AVATAR;
+}
+
 async function loadNavbarAvatar() {
     const navAvatar = document.getElementById("navProfileAvatar");
     if (!navAvatar) return;
@@ -391,16 +421,12 @@ async function loadNavbarAvatar() {
     // 1. Try localStorage cache first (fastest)
     const cachedSrc = localStorage.getItem(cacheKey);
     if (cachedSrc) {
-        navAvatar.src = cachedSrc;
-        navAvatar.onerror = function () {
-            if (this.src !== DEFAULT_AVATAR) {
-                this.onerror = null;
-                this.src = DEFAULT_AVATAR;
-            }
-        };
+        setAvatarSrc(navAvatar, cachedSrc);
+    } else {
+        setAvatarSrc(navAvatar, DEFAULT_AVATAR);
     }
 
-// 2. Try to get user from localStorage 
+    // 2. Try to get user from localStorage
     let userId = null;
     try {
         const stored = localStorage.getItem("currentUser");
@@ -424,33 +450,28 @@ async function loadNavbarAvatar() {
 
     // 4. Fetch from API to get the latest avatar
     try {
-        const response = await fetchWithTimeout(`${PROFILE_API_URL}/`, {
-            headers: getAuthHeaders()
-        });
+        const response = await fetchWithAuth(`${PROFILE_API_URL}/`);
         if (!response.ok) return;
 
         const data = await response.json();
         if (!data || !data.profile_image) {
             // No profile image set, use default
-            navAvatar.src = DEFAULT_AVATAR;
-            navAvatar.onerror = null;
+            setAvatarSrc(navAvatar, DEFAULT_AVATAR);
             localStorage.removeItem(cacheKey);
             localStorage.removeItem(tsKey);
             return;
         }
 
         const src = `${API_BASE_URL}${data.profile_image}`;
-        navAvatar.src = src;
-        navAvatar.onerror = function () {
-            if (this.src !== DEFAULT_AVATAR) {
-                this.onerror = null;
-                this.src = DEFAULT_AVATAR;
-            }
-        };
+        setAvatarSrc(navAvatar, src);
 
-        // Cache in localStorage (user-specific key) + refresh timestamp
+        // Cache in localStorage (user-specific key) + refresh timestamp.
+        // NOTE: setAvatarSrc's onerror clears this cache if the file 404s.
         localStorage.setItem(cacheKey, src);
         localStorage.setItem(tsKey, String(Date.now()));
+
+        // Verify the image actually loads; if it errors, the onerror handler
+        // above will clear the cache and swap to the default avatar.
     } catch (error) {
         // If API fails but we had cached, keep it
         console.error("Failed to load profile for avatar:", error);
@@ -469,25 +490,13 @@ function updateNavbarAvatar(profileImagePath) {
     // Update navbar avatar
     const navAvatar = document.getElementById("navProfileAvatar");
     if (navAvatar) {
-        navAvatar.src = src;
-        navAvatar.onerror = function () {
-            if (this.src !== DEFAULT_AVATAR) {
-                this.onerror = null;
-                this.src = DEFAULT_AVATAR;
-            }
-        };
+        setAvatarSrc(navAvatar, src);
     }
 
     // Update profile page header avatar if it exists
     const headerAvatar = document.getElementById("profileHeaderAvatar");
     if (headerAvatar) {
-        headerAvatar.src = src;
-        headerAvatar.onerror = function () {
-            if (this.src !== DEFAULT_AVATAR) {
-                this.onerror = null;
-                this.src = DEFAULT_AVATAR;
-            }
-        };
+        setAvatarSrc(headerAvatar, src);
     }
 
     // Cache in localStorage (user-specific key) + refresh timestamp so the
@@ -496,4 +505,3 @@ function updateNavbarAvatar(profileImagePath) {
     localStorage.setItem(cacheKey, src);
     localStorage.setItem(getAvatarTimestampKey(), String(Date.now()));
 }
-

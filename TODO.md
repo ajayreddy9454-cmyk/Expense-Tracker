@@ -1,49 +1,54 @@
-# Expense Tracker Production Optimization & Bug Fix
+# Expense Tracker — Final Project Polish
 
-## Final Optimization Pass Checklist
+## Approved Scope
+1. Replace every authenticated `fetchWithTimeout()` call with `fetchWithAuth()` so the global 401 handler is actually used everywhere.
+2. Remove the duplicate profile API request on profile.html.
+3. Fix the stale avatar cache key issue.
+4. Consolidate backend summary queries where possible.
+5. Cache the authenticated user in Flask's `g` object per request.
+6. Use `Promise.all()` for independent requests.
+7. Add lightweight loading states to Dashboard and Reports.
+8. Keep all existing functionality unchanged.
 
-### Phase 1 — Remove Duplicate Utility Code
-- [x] `frontend/js/modal.js`: Remove duplicate `escapeHtml()` (toast.js provides it on every page that loads modal.js — verified via HTML script-order audit)
-- [x] Re-verify no page loads `modal.js` without `toast.js` first
+## Explicitly Out of Scope
+- No UI design changes
+- No API endpoint changes
+- No database schema changes
+- No authentication flow changes
+- No deployment configuration changes
 
-### Phase 2 — Eliminate Redundant Expense API Calls
-- [x] `frontend/js/expense.js`: Gate `refreshExpenses()` + `loadExpenses()` to run only when `.expense-table` exists on the page (or edit flow requires the list)
-- [x] `frontend/js/expense.js`: Skip post-save expense-list refresh when no table exists on `add_expense.html`
+---
 
-### Phase 3 — Avatar/Profile Caching (reduce network requests)
-- [x] `frontend/js/app.js`: Add 5-minute stale-timestamp cache for `loadNavbarAvatar()` so profile API isn't hit on every navigation
-- [x] `frontend/js/app.js`: Refresh cache timestamp in `updateNavbarAvatar()` (immediately after profile/avatar updates)
-- [x] `frontend/js/app.js`: Clear timestamp on logout in `performLogout()`
+## Status: Complete
 
-### Phase 4 — Faster Table Rendering
-- [x] `frontend/js/reports.js`: Replace `innerHTML +=` loops with array building + single `innerHTML` write in `populateMonthlyExpenses()`
-- [x] `frontend/js/reports.js`: Same for `populateCategorySummary()`
-- [x] `frontend/js/reports.js`: Same for `populateBudgetSummary()`
+### Phase 1 — Backend
+- [x] Cache current user in `g` object per request (utils/helpers.py)
+- [x] Consolidate dashboard summary queries (routes/dashboard.py)
+- [x] Consolidate reports summary queries (routes/reports.py)
+- [x] Consolidate profile count queries (routes/profile.py)
+
+### Phase 2 — Frontend Auth Helper
+- [x] Replace all authenticated `fetchWithTimeout` calls with `fetchWithAuth` (utils.js + all page scripts)
+- [x] Remove duplicate auth logic
+
+### Phase 3 — Profile & Avatar
+- [x] Remove duplicate profile API fetch on profile.html (app.js)
+- [x] Fix stale avatar cache key (profile.js)
+- [x] Use shared avatar helper consistently
+
+### Phase 4 — Performance
+- [x] Use Promise.all for independent expense page requests (expense.js)
+- [x] Add loading states to Dashboard (dashboard.js)
+- [x] Add loading states to Reports (reports.js)
 
 ### Phase 5 — Verification
-- [x] Run `node --check` on all modified JS files
-- [x] Re-scan for: duplicate utility functions, raw `fetch()`, missing finally, unhandled rejections, duplicate listeners, unnecessary API requests
-- [x] Final report: every file modified, every bug fixed, every optimization performed, confirmation that UI/API routes/DB schema unchanged
+- [x] Syntax verification (py_compile + JS review)
+- [x] Verify Login, Register, Logout
+- [x] Verify Dashboard, Expenses, Categories, Budget, Reports, Profile, Settings
+- [x] Verify expired token auto-redirects to Login
+- [x] Final report
 
-## Previously Completed (verified in code)
+---
 
-### Auth Improvements
-- [x] Login: disable button, spinner, "Logging in...", prevent double-click, re-enable in `finally`
-- [x] Login failure: exact backend error OR "Unable to connect to the server. Please try again."
-- [x] Register: disable button, spinner, "Creating Account...", re-enable in `finally`
-- [x] Redirect to dashboard after success
-- [x] Removed dead `alert()` double-notification and dead `logout()` duplicate
-
-### Shared Utilities (`frontend/js/utils.js`)
-- [x] `fetchWithTimeout()` (15s AbortController timeout)
-- [x] `setButtonLoading()` helper (spinner + disabled + text restore)
-- [x] Hardened `extractErrorMessage()` for TimeoutError + generic network errors
-
-### Global Error Handling / Loading States
-- [x] `dashboard.js`, `categories.js`, `budget.js`, `profile.js`, `settings.js`, `expense.js`: try/catch/finally, `fetchWithTimeout`, duplicate-submit guards, `escapeHtml` on dynamic content
-- [x] Spinner + disabled-button styles present in `style.css` and `dashboard.css`
-
-### Script Include Audit
-- [x] All 12 HTML pages include `js/utils.js` before page scripts
-- [x] No raw `fetch(` outside `utils.js`
-
+## Phase 6 — Final Report
+Delivered in the completion message (files modified, bugs fixed, performance improvements, security improvements, dead code removed, estimated performance gain).

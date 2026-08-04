@@ -20,19 +20,19 @@ def get_reports():
 
     uid = user.id
 
-    # Total expenses count
-    total_expenses = (
-        db.session.query(db.func.count(Expense.id))
-        .filter(Expense.user_id == uid)
-        .scalar()
-    ) or 0
+    # Single aggregate query replaces the two separate count/sum queries.
+    summary_row = db.session.execute(
+        text("""
+            SELECT COUNT(e.id) AS total_expenses,
+                   COALESCE(SUM(e.amount), 0) AS total_amount_spent
+            FROM expenses e
+            WHERE e.user_id = :uid
+        """),
+        {"uid": uid},
+    ).fetchone()
 
-    # Total amount spent
-    total_amount_spent = (
-        db.session.query(db.func.coalesce(db.func.sum(Expense.amount), 0))
-        .filter(Expense.user_id == uid)
-        .scalar()
-    ) or 0
+    total_expenses = summary_row.total_expenses or 0
+    total_amount_spent = summary_row.total_amount_spent or 0
 
     # Monthly expense totals
     monthly_rows = db.session.execute(
@@ -112,4 +112,3 @@ def get_reports():
             "budget_summary": budget_summary,
         }
     )
-

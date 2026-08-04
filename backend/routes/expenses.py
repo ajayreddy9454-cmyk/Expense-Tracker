@@ -4,18 +4,20 @@ import os
 import traceback
 import uuid
 
-from sqlalchemy import text
-
 from database import db
 from models.expense import Expense
 from models.category import Category
-from utils.helpers import get_current_user
+from utils.helpers import get_current_user, delete_upload
 
 expenses_bp = Blueprint("expenses", __name__)
 
 # Receipt uploads are stored in backend/static/uploads/
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "static", "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# Allowed receipt file types + upload size cap (10 MB)
+ALLOWED_RECEIPT_EXTENSIONS = {"pdf", "png", "jpg", "jpeg", "gif", "webp"}
+MAX_RECEIPT_SIZE = 10 * 1024 * 1024
 
 
 def _extract_data():
@@ -39,12 +41,30 @@ def _parse_date(date_str):
 
 
 def _handle_receipt_upload():
+    """Validate + save an uploaded receipt.
+
+    Returns the stored filename, or None when no file is attached.
+    Raises ValueError on an invalid file type or an oversized upload so the
+    caller can return a clean 4xx error.
+    """
     uploaded_file = request.files.get("receipt") if hasattr(request, "files") else None
     if not uploaded_file or not uploaded_file.filename:
         return None
 
-    ext = os.path.splitext(uploaded_file.filename)[1].lower()
-    unique_name = f"receipt_{uuid.uuid4().hex}{ext}"
+    ext = os.path.splitext(uploaded_file.filename)[1].lower().lstrip(".")
+    if ext not in ALLOWED_RECEIPT_EXTENSIONS:
+        raise ValueError(
+            "Invalid file type. Allowed: PDF, PNG, JPG, JPEG, GIF, WEBP"
+        )
+
+    # Validate file size without loading it fully into memory
+    uploaded_file.seek(0, os.SEEK_END)
+    size = uploaded_file.tell()
+    uploaded_file.seek(0)
+    if size > MAX_RECEIPT_SIZE:
+        raise ValueError("File too large. Maximum size is 10MB.")
+
+    unique_name = f"receipt_{uuid.uuid4().hex}.{ext}"
     save_path = os.path.join(UPLOAD_DIR, unique_name)
     uploaded_file.save(save_path)
     return unique_name
@@ -91,9 +111,12 @@ def add_expense():
         db.session.commit()
 
         return jsonify({"message": "Expense added successfully"}), 201
+    except ValueError as ve:
+        # Invalid file type / oversized upload
+        return jsonify({"message": str(ve)}), 400
     except Exception as e:
         traceback.print_exc()
-        return jsonify({"message": str(e)}), 500
+        return jsonify({"message": "Failed to add expense. Please try again."}), 500
 
 
 # ==========================
@@ -109,6 +132,7 @@ def get_expenses():
         db.session.query(Expense, Category.name)
         .outerjoin(Category, Expense.category_id == Category.id)
         .filter(Expense.user_id == user.id)
+        .order_by(Expense.expense_date.desc(), Expense.id.desc())
         .all()
     )
 
@@ -141,37 +165,50 @@ def edit_expense(id):
     if not user:
         return jsonify({"message": "Authentication required"}), 401
 
-    data = _extract_data()
-    receipt_value = _handle_receipt_upload()
+    try:
+        data = _extract_data()
+        receipt_value = _handle_receipt_upload()
 
-    expense = Expense.query.filter_by(id=id, user_id=user.id).first()
-    if not expense:
-        return jsonify({"message": "Expense not found"}), 404
+        expense = Expense.query.filter_by(id=id, user_id=user.id).first()
+        if not expense:
+            return jsonify({"message": "Expense not found"}), 404
 
-    title = data.get("title")
-    amount = data.get("amount")
-    category_id = data.get("category_id")
-    payment_method = data.get("payment_method")
-    expense_date = data.get("expense_date")
-    notes = data.get("notes")
+        title = data.get("title")
+        amount = data.get("amount")
+        category_id = data.get("category_id")
+        payment_method = data.get("payment_method")
+        expense_date = data.get("expense_date")
+        notes = data.get("notes")
 
-    if title is not None and title != "":
-        expense.title = title
-    if amount is not None and amount != "":
-        expense.amount = float(amount)
-    if category_id is not None and category_id != "":
-        expense.category_id = int(category_id)
-    if payment_method is not None:
-        expense.payment_method = payment_method
-    if expense_date is not None and expense_date != "":
-        expense.expense_date = _parse_date(expense_date)
-    if notes is not None:
-        expense.notes = notes
+        if title is not None and title != "":
+            expense.title = title
+        if amount is not None and amount != "":
+            expense.amount = float(amount)
+        if category_id is not None and category_id != "":
+            expense.category_id = int(category_id)
+        if payment_method is not None:
+            expense.payment_method = payment_method
+        if expense_date is not None and expense_date != "":
+            expense.expense_date = _parse_date(expense_date)
+        if notes is not None:
+            expense.notes = notes
 
-    expense.receipt = receipt_value
+        # Only update the receipt when a NEW file was uploaded.
+        # This fixes the bug where editing an expense without attaching a
+        # new receipt silently wiped the existing receipt reference.
+        if receipt_value:
+            # Remove the old receipt file from disk (orphan cleanup)
+            if expense.receipt:
+                delete_upload(UPLOAD_DIR, expense.receipt)
+            expense.receipt = receipt_value
 
-    db.session.commit()
-    return jsonify({"message": "Expense updated successfully"}), 200
+        db.session.commit()
+        return jsonify({"message": "Expense updated successfully"}), 200
+    except ValueError as ve:
+        return jsonify({"message": str(ve)}), 400
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"message": "Failed to update expense. Please try again."}), 500
 
 
 # ==========================
@@ -187,7 +224,20 @@ def delete_expense(id):
     if not expense:
         return jsonify({"message": "Expense not found"}), 404
 
-    db.session.delete(expense)
-    db.session.commit()
+    # Capture the receipt filename before deletion so we can clean up disk
+    receipt_name = expense.receipt if expense.receipt else None
+
+    try:
+        db.session.delete(expense)
+        db.session.commit()
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"message": "Failed to delete expense. Please try again."}), 500
+
+    # Remove the receipt file from the filesystem (do not fail the request
+    # if the file is already missing).
+    if receipt_name:
+        delete_upload(UPLOAD_DIR, receipt_name)
+
     return jsonify({"message": "Expense deleted successfully"}), 200
 

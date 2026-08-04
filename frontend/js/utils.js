@@ -81,6 +81,52 @@ function authGuard() {
 }
 
 // ======================================
+// GLOBAL SESSION EXPIRY HANDLER
+// ======================================
+
+/**
+ * Called when the API returns 401 (token expired / invalid).
+ * Clears session data and redirects to the login page so the user is
+ * never stuck on a broken authenticated page.
+ */
+function handleSessionExpired() {
+    // Avoid redirect loops if already on the login page
+    const path = (window.location.pathname || "").split("/").pop();
+    if (path === "index.html" || path === "register.html") {
+        return;
+    }
+
+    try {
+        const stored = localStorage.getItem("currentUser");
+        let userId = null;
+        if (stored) {
+            const user = JSON.parse(stored);
+            userId = user && user.id ? user.id : null;
+        }
+        localStorage.removeItem("currentUser");
+        localStorage.removeItem("isLoggedIn");
+        localStorage.removeItem("profile_image_url");
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("token");
+        if (userId) {
+            localStorage.removeItem("profile_image_url_" + userId);
+            localStorage.removeItem("profile_image_ts_" + userId);
+        }
+        sessionStorage.clear();
+    } catch (e) {
+        // ignore
+    }
+
+    if (typeof showToast === "function") {
+        showToast("Your session has expired. Please log in again.", "warning");
+    }
+
+    setTimeout(() => {
+        window.location.href = "index.html";
+    }, 300);
+}
+
+// ======================================
 // Fetch with Timeout (prevents infinite hanging)
 // ======================================
 
@@ -115,6 +161,28 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = API_TIMEOUT_MS) {
     } finally {
         clearTimeout(timeoutId);
     }
+}
+
+/**
+ * fetch() wrapper that includes auth headers, applies a timeout, and
+ * automatically logs the user out when the session is expired/invalid.
+ *
+ * @param {string} url - Request URL
+ * @param {Object} [options] - Standard fetch() options (headers merged with Auth header)
+ * @param {number} [timeoutMs=API_TIMEOUT_MS] - Timeout in milliseconds
+ * @returns {Promise<Response>}
+ */
+async function fetchWithAuth(url, options = {}, timeoutMs = API_TIMEOUT_MS) {
+    const headers = Object.assign({}, getAuthHeaders(), options.headers || {});
+
+    const response = await fetchWithTimeout(url, Object.assign({}, options, { headers }), timeoutMs);
+
+    // Session expired/invalid → force re-login
+    if (response.status === 401) {
+        handleSessionExpired();
+    }
+
+    return response;
 }
 
 // ======================================

@@ -8,10 +8,24 @@ document.addEventListener("DOMContentLoaded", () => {
     // Auth guard first
     if (!authGuard()) return;
 
+    setCurrentDate();
     setWelcomeUserName();
     loadDashboard();
 
 });
+
+// ======================================
+// Set Current Date (replaces hard-coded date)
+// ======================================
+
+function setCurrentDate() {
+    const el = document.getElementById("currentDate");
+    if (!el) return;
+
+    const now = new Date();
+    const options = { day: "numeric", month: "long", year: "numeric" };
+    el.textContent = now.toLocaleDateString("en-GB", options).replace(/ /g, " ");
+}
 
 // ======================================
 // Set Welcome User Name (time-based greeting + first name only)
@@ -74,9 +88,7 @@ async function loadDashboard() {
 
 async function fetchDashboardSummary() {
     try {
-        const response = await fetchWithTimeout(`${API_BASE_URL}/api/dashboard/`, {
-            headers: getAuthHeaders()
-        });
+        const response = await fetchWithAuth(`${API_BASE_URL}/api/dashboard/`);
 
         if (!response.ok) {
             const msg = await extractErrorMessage(new Error("Failed to load dashboard"), response);

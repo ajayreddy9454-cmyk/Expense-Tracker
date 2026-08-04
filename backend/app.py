@@ -3,6 +3,7 @@ import os
 
 from flask import Flask, jsonify
 from flask_cors import CORS
+from werkzeug.exceptions import HTTPException
 
 from config import Config
 from database import db
@@ -89,6 +90,38 @@ def test_db():
         return jsonify({"status": "success", "message": "Database Connected Successfully"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.errorhandler(HTTPException)
+def handle_http_exception(exc):
+    """Return HTTP errors as JSON instead of HTML pages."""
+    response = jsonify({
+        "message": exc.description,
+        "error": exc.name,
+    })
+    response.status_code = exc.code
+    return response
+
+
+@app.errorhandler(404)
+def not_found(exc):
+    return jsonify({"message": "Endpoint not found", "error": "Not Found"}), 404
+
+
+@app.errorhandler(500)
+def internal_error(exc):
+    """Return a clean JSON 500 instead of the default HTML error page.
+
+    This is especially important when the database is unreachable: the
+    frontend can parse the JSON and show a friendly toast rather than an
+    opaque HTML "Internal Server Error" page.
+    """
+    try:
+        db.session.rollback()
+    except Exception:
+        pass
+    logger.error("Unhandled exception: %s", exc)
+    return jsonify({"message": "Internal server error. Please try again."}), 500
 
 
 # Auto-create database tables on startup.

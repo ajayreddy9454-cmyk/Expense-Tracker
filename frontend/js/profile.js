@@ -43,9 +43,7 @@ async function loadProfile() {
     }
 
     try {
-        const response = await fetchWithTimeout(`${PROFILE_API}/`, {
-            headers: getAuthHeaders()
-        });
+        const response = await fetchWithAuth(`${PROFILE_API}/`);
         const data = await response.json();
 
         if (!response.ok) {
@@ -174,7 +172,13 @@ function updateAvatar(profileImagePath) {
             };
         }
 
-        localStorage.setItem("profile_image_url", src);
+        // Use the same user-specific cache key as app.js so the fallback path
+        // never leaks one user's avatar into another user's cache. Also clear
+        // the legacy non-user-specific key we used to write here.
+        const userId = getUserIdForStorage();
+        const cacheKey = userId ? "profile_image_url_" + userId : "profile_image_url";
+        localStorage.setItem(cacheKey, src);
+        localStorage.removeItem("profile_image_url");
     }
 }
 
@@ -262,9 +266,9 @@ async function handleSavePersonalInfo(e) {
     }
 
     try {
-        const response = await fetchWithTimeout(`${PROFILE_API}/`, {
+        const response = await fetchWithAuth(`${PROFILE_API}/`, {
             method: "PUT",
-            headers: Object.assign({ "Content-Type": "application/json" }, getAuthHeaders()),
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
         });
 
@@ -329,9 +333,9 @@ async function handleSaveAbout() {
     }
 
     try {
-        const response = await fetchWithTimeout(`${PROFILE_API}/`, {
+        const response = await fetchWithAuth(`${PROFILE_API}/`, {
             method: "PUT",
-            headers: Object.assign({ "Content-Type": "application/json" }, getAuthHeaders()),
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
         });
 
@@ -388,9 +392,9 @@ async function handleChangePassword(e) {
     }
 
     try {
-        const response = await fetchWithTimeout(`${PROFILE_API}/password`, {
+        const response = await fetchWithAuth(`${PROFILE_API}/password`, {
             method: "PUT",
-            headers: Object.assign({ "Content-Type": "application/json" }, getAuthHeaders()),
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 current_password: currentPassword,
                 new_password: newPassword,
@@ -455,22 +459,30 @@ async function handleAvatarUpload(e) {
     };
     reader.readAsDataURL(file);
 
-    // Show uploading state
+    // Show uploading state: dim the image and inject a spinner overlay
     fileInput.dataset.uploading = "true";
     const avatarClickable = document.getElementById("avatarClickable");
     if (avatarClickable) {
         const img = avatarClickable.querySelector("img");
         if (img) img.style.opacity = "0.5";
+
+        // Add a spinner on top of the avatar while uploading
+        if (!avatarClickable.querySelector(".avatar-upload-spinner")) {
+            const spinner = document.createElement("div");
+            spinner.className = "avatar-upload-spinner";
+            spinner.innerHTML = '<span class="button-spinner" aria-hidden="true"></span>';
+            avatarClickable.style.position = "relative";
+            avatarClickable.appendChild(spinner);
+        }
     }
 
-// Upload to server
+    // Upload to server
     const formData = new FormData();
     formData.append("avatar", file);
 
     try {
-        const response = await fetchWithTimeout(`${PROFILE_API}/avatar`, {
+        const response = await fetchWithAuth(`${PROFILE_API}/avatar`, {
             method: "POST",
-            headers: getAuthHeaders(),
             body: formData,
         });
 
@@ -503,6 +515,10 @@ async function handleAvatarUpload(e) {
         if (avatarClickable) {
             const img = avatarClickable.querySelector("img");
             if (img) img.style.opacity = "";
+
+            // Remove the spinner overlay
+            const spinnerEl = avatarClickable.querySelector(".avatar-upload-spinner");
+            if (spinnerEl) spinnerEl.remove();
         }
     }
 }
@@ -567,7 +583,3 @@ function showMessageOnPage(message) {
     errorDiv.textContent = message;
     section.prepend(errorDiv);
 }
-
-
-
-

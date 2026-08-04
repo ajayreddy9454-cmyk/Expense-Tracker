@@ -43,9 +43,7 @@ async function loadSettings() {
     }
 
     try {
-        const response = await fetchWithTimeout(`${SETTINGS_API}/`, {
-            headers: getAuthHeaders()
-        });
+        const response = await fetchWithAuth(`${SETTINGS_API}/`);
         const data = await response.json().catch(() => null);
 
         if (!response.ok) {
@@ -137,12 +135,9 @@ async function handleSaveSettings() {
     }
 
     try {
-        const response = await fetchWithTimeout(`${SETTINGS_API}/`, {
+        const response = await fetchWithAuth(`${SETTINGS_API}/`, {
             method: "PUT",
-            headers: Object.assign(
-                { "Content-Type": "application/json" },
-                getAuthHeaders()
-            ),
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
         });
 
@@ -218,7 +213,3 @@ function showMessageOnPage(message) {
     errorDiv.textContent = message;
     section.prepend(errorDiv);
 }
-
-
-
-
